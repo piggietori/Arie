@@ -1,0 +1,1160 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Arie's Healthy Plan</title>
+<link rel="manifest" href="manifest.json">
+<link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="apple-mobile-web-app-title" content="Arie's Plan">
+<meta name="theme-color" content="#FFB84C">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@500;600;700&family=Nunito:wght@500;700;800&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #FFFBF0;
+    --ink: #2B2B2B;
+    --white: #FFFFFF;
+    --shadow: rgba(0, 0, 0, 0.12);
+
+    --breakfast: #FFB84C;
+    --lunch: #5FD068;
+    --snack: #C77DFF;
+    --dinner: #4DA8DA;
+
+    --cat-grains: #F4A300;
+    --cat-proteins: #FF6B6B;
+    --cat-fruits: #FF6F91;
+    --cat-veg: #4CAF50;
+    --cat-dairy: #64B5F6;
+    --cat-fats: #9575CD;
+    --cat-snacks: #26C6DA;
+  }
+
+  * , *::before, *::after {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+  }
+
+  html {
+    -webkit-font-smoothing: antialiased;
+    scroll-behavior: smooth;
+  }
+
+  body {
+    background: var(--bg);
+    color: var(--ink);
+    font-family: 'Nunito', sans-serif;
+    padding-bottom: 6rem;
+  }
+
+  h1, h2, button {
+    font-family: 'Fredoka', sans-serif;
+  }
+
+  .visually-hidden {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    padding: 0;
+    margin: -1px;
+    overflow: hidden;
+    clip: rect(0, 0, 0, 0);
+    white-space: nowrap;
+    border: 0;
+  }
+
+  /* ---------- Header ---------- */
+
+  header.hero {
+    text-align: center;
+    padding: 1.5rem 1rem 1rem;
+  }
+
+  header.hero h1 {
+    font-size: clamp(1.75rem, 5vw, 2.5rem);
+    font-weight: 700;
+    margin-bottom: 0.5rem;
+  }
+
+  header.hero p {
+    font-size: 1.05rem;
+    font-weight: 700;
+    color: #6b6b6b;
+  }
+
+  /* ---------- Shared button/input styles ---------- */
+
+  .btn {
+    font-family: 'Fredoka', sans-serif;
+    font-weight: 600;
+    font-size: 1rem;
+    border: none;
+    border-radius: 999px;
+    min-height: 44px;
+    padding: 0.6rem 1.3rem;
+    cursor: pointer;
+    box-shadow: 0 3px 0 rgba(0, 0, 0, 0.15);
+    transition: transform 0.1s ease;
+  }
+
+  .btn:active {
+    transform: translateY(2px) scale(0.98);
+    box-shadow: 0 1px 0 rgba(0, 0, 0, 0.15);
+  }
+
+  .btn:focus-visible,
+  .food-btn:focus-visible,
+  .slot:focus-visible,
+  .tab-btn:focus-visible,
+  .bucket-toggle:focus-visible,
+  #custom-food-input:focus-visible {
+    outline: 3px solid var(--breakfast);
+    outline-offset: 2px;
+  }
+
+  .btn-add {
+    background: var(--lunch);
+    color: var(--white);
+  }
+
+  #custom-food-form {
+    display: flex;
+    gap: 0.5rem;
+    margin-top: 0.75rem;
+  }
+
+  #custom-food-input {
+    font-family: 'Nunito', sans-serif;
+    font-size: 1rem;
+    font-weight: 700;
+    padding: 0.6rem 1rem;
+    border: 2px solid #FFD37A;
+    border-radius: 999px;
+    min-height: 44px;
+    flex: 1 1 auto;
+    min-width: 0;
+    background: var(--white);
+  }
+
+  /* ---------- Pinned zone: buckets + category tabs ---------- */
+
+  #pinned-zone {
+    position: sticky;
+    top: 0;
+    z-index: 30;
+    background: var(--bg);
+    box-shadow: 0 4px 14px var(--shadow);
+  }
+
+  .pinned-inner {
+    max-width: 700px;
+    margin: 0 auto;
+    padding: 0.75rem 1rem 0.5rem;
+  }
+
+  .meal-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 0.6rem;
+    margin-bottom: 0.6rem;
+  }
+
+  @media (max-width: 420px) {
+    .meal-grid {
+      grid-template-columns: 1fr;
+    }
+  }
+
+  .slot {
+    background: var(--white);
+    border-radius: 16px;
+    border: 3px solid transparent;
+    cursor: pointer;
+    transition: transform 0.1s ease, border-color 0.15s ease, box-shadow 0.15s ease;
+  }
+
+  .slot:active {
+    transform: scale(0.98);
+  }
+
+  .slot.is-selected {
+    border-color: #2B2B2B;
+    box-shadow: 0 0 0 3px rgba(0, 0, 0, 0.08);
+  }
+
+  .slot.is-drop-target {
+    border-color: #2B2B2B;
+    box-shadow: 0 0 0 5px rgba(0, 0, 0, 0.14);
+    transform: scale(1.03);
+  }
+
+  @keyframes bucket-added-pulse {
+    0%   { transform: scale(1); }
+    40%  { transform: scale(1.06); }
+    100% { transform: scale(1); }
+  }
+
+  .slot.bucket-pulse {
+    animation: bucket-added-pulse 0.4s ease;
+  }
+
+  .slot[data-meal="Breakfast"] { background: color-mix(in srgb, var(--breakfast) 18%, white); }
+  .slot[data-meal="Lunch"]     { background: color-mix(in srgb, var(--lunch) 18%, white); }
+  .slot[data-meal="Snack"]     { background: color-mix(in srgb, var(--snack) 18%, white); }
+  .slot[data-meal="Dinner"]    { background: color-mix(in srgb, var(--dinner) 18%, white); }
+
+  .bucket-summary {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.5rem;
+    padding: 0.5rem 0.6rem;
+    min-height: 44px;
+  }
+
+  .slot-label {
+    font-family: 'Fredoka', sans-serif;
+    font-weight: 600;
+    font-size: 0.95rem;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  .bucket-toggle {
+    display: flex;
+    align-items: center;
+    gap: 0.3rem;
+    background: rgba(255, 255, 255, 0.65);
+    border: none;
+    border-radius: 999px;
+    padding: 0.3rem 0.55rem;
+    font-family: 'Nunito', sans-serif;
+    font-size: 0.85rem;
+    cursor: pointer;
+    min-height: 36px;
+    flex: 0 0 auto;
+  }
+
+  .bucket-preview-emojis {
+    font-size: 0.95rem;
+    letter-spacing: 1px;
+  }
+
+  .bucket-empty {
+    font-size: 0.78rem;
+    font-weight: 700;
+    color: #888;
+  }
+
+  .chevron {
+    transition: transform 0.2s ease;
+    font-size: 0.7rem;
+  }
+
+  .slot[data-open="true"] .chevron {
+    transform: rotate(180deg);
+  }
+
+  .bucket-detail {
+    display: none;
+    padding: 0 0.6rem 0.6rem;
+  }
+
+  .slot[data-open="true"] .bucket-detail {
+    display: block;
+  }
+
+  .bucket-detail-empty {
+    font-size: 0.82rem;
+    font-weight: 700;
+    color: #888;
+  }
+
+  .chip-list {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.35rem;
+  }
+
+  .chip {
+    background: var(--white);
+    border-radius: 999px;
+    padding: 0.3rem 0.4rem 0.3rem 0.7rem;
+    font-size: 0.85rem;
+    font-weight: 700;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.35rem;
+    box-shadow: 0 2px 4px var(--shadow);
+  }
+
+  .chip button.remove {
+    background: #F0F0F0;
+    border: none;
+    border-radius: 50%;
+    width: 22px;
+    height: 22px;
+    min-height: unset;
+    line-height: 1;
+    cursor: pointer;
+    font-size: 0.8rem;
+    font-weight: 700;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0;
+  }
+
+  /* ---------- Category tabs ---------- */
+
+  #category-tabs {
+    display: flex;
+    gap: 0.4rem;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+    padding-bottom: 0.15rem;
+  }
+
+  .tab-btn {
+    flex: 0 0 auto;
+    font-family: 'Fredoka', sans-serif;
+    font-weight: 600;
+    font-size: 0.85rem;
+    border: none;
+    border-radius: 999px;
+    padding: 0.5rem 0.9rem;
+    min-height: 40px;
+    cursor: pointer;
+    white-space: nowrap;
+    background: #FFF3D6;
+    color: var(--ink);
+    transition: transform 0.1s ease;
+  }
+
+  .tab-btn:active {
+    transform: scale(0.95);
+  }
+
+  /* ---------- Celebration ---------- */
+
+  .day-complete-banner {
+    text-align: center;
+    font-family: 'Fredoka', sans-serif;
+    font-weight: 700;
+    font-size: 1rem;
+    color: var(--ink);
+    background: linear-gradient(90deg, #FFE8B0, #FFD1E8, #C9F3D6, #C7E8FF);
+    background-size: 300% 100%;
+    border-radius: 14px;
+    padding: 0.6rem 0.9rem;
+    margin-bottom: 0.6rem;
+    animation: banner-shimmer 6s ease infinite;
+  }
+
+  .day-complete-banner[hidden] {
+    display: none;
+  }
+
+  @keyframes banner-shimmer {
+    0%   { background-position: 0% 50%; }
+    50%  { background-position: 100% 50%; }
+    100% { background-position: 0% 50%; }
+  }
+
+  #confetti-layer {
+    position: fixed;
+    inset: 0;
+    pointer-events: none;
+    z-index: 70;
+    overflow: hidden;
+  }
+
+  .confetti-piece {
+    position: absolute;
+    top: -10px;
+    font-size: 1.3rem;
+    animation: confetti-fall linear forwards;
+  }
+
+  @keyframes confetti-fall {
+    0%   { transform: translateY(0) rotate(0deg); opacity: 1; }
+    100% { transform: translateY(105vh) rotate(360deg); opacity: 0.9; }
+  }
+
+  .affirm-bubble {
+    position: fixed;
+    z-index: 65;
+    pointer-events: none;
+    font-family: 'Fredoka', sans-serif;
+    font-weight: 700;
+    font-size: 0.9rem;
+    color: var(--ink);
+    background: var(--white);
+    border-radius: 999px;
+    padding: 0.35rem 0.75rem;
+    box-shadow: 0 4px 12px var(--shadow);
+    animation: affirm-float 1.1s ease forwards;
+  }
+
+  @keyframes affirm-float {
+    0%   { transform: translate(-50%, 0); opacity: 0; }
+    20%  { opacity: 1; }
+    100% { transform: translate(-50%, -34px); opacity: 0; }
+  }
+
+  /* ---------- Food browser ---------- */
+
+  main.layout {
+    max-width: 700px;
+    margin: 0 auto;
+    padding: 1rem 1rem 1.5rem;
+  }
+
+  .food-grid {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.6rem;
+  }
+
+  .food-btn {
+    background: #FFF9EC;
+    border: 2px solid #F1E6C8;
+    border-radius: 16px;
+    padding: 0.6rem 0.9rem;
+    font-family: 'Nunito', sans-serif;
+    font-weight: 800;
+    font-size: 0.95rem;
+    min-height: 44px;
+    cursor: grab;
+    touch-action: none;
+    transition: transform 0.1s ease, background 0.15s ease, opacity 0.15s ease;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.4rem;
+  }
+
+  .food-btn:hover {
+    background: #FFEFC8;
+  }
+
+  .food-btn.is-lifted {
+    opacity: 0.35;
+    cursor: grabbing;
+  }
+
+  @keyframes food-added-pulse {
+    0%   { transform: scale(1); background: #FFF9EC; }
+    40%  { transform: scale(1.12); background: #D9F5DC; }
+    100% { transform: scale(1); background: #FFF9EC; }
+  }
+
+  .food-btn.added {
+    animation: food-added-pulse 0.4s ease;
+  }
+
+  /* ---------- Drag ghost ---------- */
+
+  #drag-ghost {
+    position: fixed;
+    left: 0;
+    top: 0;
+    z-index: 60;
+    pointer-events: none;
+    transition: transform 0.2s ease, opacity 0.2s ease;
+    opacity: 1;
+  }
+
+  #drag-ghost[hidden] {
+    display: none;
+  }
+
+  .ghost-chip {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.4rem;
+    background: var(--white);
+    border-radius: 16px;
+    padding: 0.5rem 0.85rem;
+    font-family: 'Nunito', sans-serif;
+    font-weight: 800;
+    font-size: 0.95rem;
+    box-shadow: 0 10px 24px rgba(0, 0, 0, 0.28);
+    transform: rotate(-4deg) scale(1.08);
+    transition: transform 0.2s ease;
+  }
+
+  /* ---------- Footer controls ---------- */
+
+  footer#controls {
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    display: flex;
+    justify-content: center;
+    gap: 0.75rem;
+    padding: 0.85rem;
+    background: var(--white);
+    box-shadow: 0 -4px 14px var(--shadow);
+    z-index: 20;
+    transition: transform 0.2s ease;
+  }
+
+  body.dragging footer#controls {
+    transform: translateY(120%);
+  }
+
+  .btn-print {
+    background: var(--dinner);
+    color: var(--white);
+  }
+
+  .btn-clear {
+    background: #FF6B6B;
+    color: var(--white);
+  }
+
+  /* ---------- Print ---------- */
+
+  @media print {
+    @page {
+      margin: 1cm;
+    }
+
+    #pinned-zone {
+      position: static;
+      box-shadow: none;
+      background: white;
+    }
+
+    #category-tabs, .food-grid, #custom-food-form, footer#controls, header.hero p,
+    .chip button.remove, .bucket-toggle, #drag-ghost,
+    #confetti-layer, .day-complete-banner {
+      display: none !important;
+    }
+
+    .slot .bucket-detail {
+      display: block !important;
+    }
+
+    body {
+      background: white;
+      padding-bottom: 0;
+    }
+
+    .slot {
+      background: white !important;
+      border: 1px solid #999;
+      box-shadow: none;
+      page-break-inside: avoid;
+    }
+
+    .chip {
+      box-shadow: none;
+      border: 1px solid #ccc;
+      background: white;
+    }
+  }
+</style>
+</head>
+<body>
+
+<header class="hero">
+  <h1>🥗 Arie's Healthy Plan 🌟</h1>
+  <p>You're in charge — drag or tap a food to build your day!</p>
+</header>
+
+<div id="pinned-zone">
+  <div class="pinned-inner">
+    <div id="day-complete-banner" class="day-complete-banner" hidden>🌟 You built a whole healthy day, Arie! 🌟</div>
+    <div id="meals" class="meal-grid" role="radiogroup" aria-label="Choose a meal"></div>
+    <div id="category-tabs" role="tablist" aria-label="Food categories"></div>
+  </div>
+</div>
+
+<div id="confetti-layer" aria-hidden="true"></div>
+
+<main class="layout">
+  <div id="food-grid" class="food-grid" role="tabpanel"></div>
+
+  <form id="custom-food-form" autocomplete="off">
+    <input id="custom-food-input" type="text" placeholder="Add your own food..." maxlength="40">
+    <button type="submit" class="btn btn-add" id="custom-food-submit">Add ➕</button>
+  </form>
+</main>
+
+<footer id="controls">
+  <button class="btn btn-print" id="print-btn">🖨️ Print my plan</button>
+  <button class="btn btn-clear" id="clear-btn">🗑️ Start Over</button>
+</footer>
+
+<div id="drag-ghost" hidden aria-hidden="true"></div>
+<div id="live-status" class="visually-hidden" aria-live="polite"></div>
+
+<script>
+(function () {
+  'use strict';
+
+  var STORAGE_KEY = 'kidMealPlanner:v2';
+  var MEALS = ['Breakfast', 'Lunch', 'Snack', 'Dinner'];
+  var DRAG_THRESHOLD = 8;
+
+  var CATEGORIES = [
+    {
+      name: 'Grains & Starches',
+      emoji: '🌾',
+      color: 'var(--cat-grains)',
+      items: [
+        { label: 'Oatmeal', emoji: '🥣' },
+        { label: 'Whole Grain Cereal', emoji: '🥣' },
+        { label: 'Brown Rice', emoji: '🍚' },
+        { label: 'Whole Wheat Bread', emoji: '🍞' },
+        { label: 'Whole Wheat Pasta', emoji: '🍝' },
+        { label: 'Quinoa', emoji: '🌰' },
+        { label: 'Barley Soup', emoji: '🍲' },
+        { label: 'Whole Grain Tortilla', emoji: '🌯' },
+        { label: 'Sweet Potato', emoji: '🍠' }
+      ]
+    },
+    {
+      name: 'Proteins',
+      emoji: '🍗',
+      color: 'var(--cat-proteins)',
+      items: [
+        { label: 'Chicken Breast', emoji: '🍗' },
+        { label: 'Turkey', emoji: '🦃' },
+        { label: 'Salmon', emoji: '🐟' },
+        { label: 'Tuna', emoji: '🐟' },
+        { label: 'White Fish', emoji: '🐠' },
+        { label: 'Lean Pork Tenderloin', emoji: '🐖' },
+        { label: 'Eggs', emoji: '🥚' },
+        { label: 'Black Beans', emoji: '🫘' },
+        { label: 'Kidney Beans', emoji: '🫘' },
+        { label: 'Chickpeas', emoji: '🧆' },
+        { label: 'Lentils', emoji: '🍛' },
+        { label: 'Tofu', emoji: '🧊' },
+        { label: 'Edamame', emoji: '🫛' }
+      ]
+    },
+    {
+      name: 'Fruits',
+      emoji: '🍎',
+      color: 'var(--cat-fruits)',
+      items: [
+        { label: 'Apple', emoji: '🍎' },
+        { label: 'Banana', emoji: '🍌' },
+        { label: 'Orange', emoji: '🍊' },
+        { label: 'Strawberries', emoji: '🍓' },
+        { label: 'Blueberries', emoji: '🫐' },
+        { label: 'Grapes', emoji: '🍇' },
+        { label: 'Pear', emoji: '🍐' },
+        { label: 'Kiwi', emoji: '🥝' },
+        { label: 'Mango', emoji: '🥭' },
+        { label: 'Watermelon', emoji: '🍉' }
+      ]
+    },
+    {
+      name: 'Vegetables',
+      emoji: '🥦',
+      color: 'var(--cat-veg)',
+      items: [
+        { label: 'Broccoli', emoji: '🥦' },
+        { label: 'Carrots', emoji: '🥕' },
+        { label: 'Spinach', emoji: '🥬' },
+        { label: 'Bell Peppers', emoji: '🫑' },
+        { label: 'Green Beans', emoji: '🫛' },
+        { label: 'Cucumber', emoji: '🥒' },
+        { label: 'Tomato', emoji: '🍅' },
+        { label: 'Sweet Corn', emoji: '🌽' },
+        { label: 'Peas', emoji: '🟢' },
+        { label: 'Zucchini', emoji: '🥒' }
+      ]
+    },
+    {
+      name: 'Dairy & Alternatives',
+      emoji: '🥛',
+      color: 'var(--cat-dairy)',
+      items: [
+        { label: 'Low-Fat Milk', emoji: '🥛' },
+        { label: 'Low-Fat Yogurt', emoji: '🍦' },
+        { label: 'Low-Fat Cheese', emoji: '🧀' },
+        { label: 'Fortified Soy Milk', emoji: '🥛' },
+        { label: 'Low-Fat Cottage Cheese', emoji: '🧈' }
+      ]
+    },
+    {
+      name: 'Healthy Fats',
+      emoji: '🥑',
+      color: 'var(--cat-fats)',
+      items: [
+        { label: 'Avocado', emoji: '🥑' },
+        { label: 'Almonds', emoji: '🌰' },
+        { label: 'Walnuts', emoji: '🌰' },
+        { label: 'Natural Peanut Butter', emoji: '🥜' },
+        { label: 'Chia Seeds', emoji: '✨' },
+        { label: 'Ground Flaxseed', emoji: '✨' },
+        { label: 'Olive Oil Drizzle', emoji: '🫒' }
+      ]
+    },
+    {
+      name: 'Snacks & Extras',
+      emoji: '🍿',
+      color: 'var(--cat-snacks)',
+      items: [
+        { label: 'Air-Popped Popcorn', emoji: '🍿' },
+        { label: 'Hummus & Veggies', emoji: '🥕' },
+        { label: 'Rice Cakes', emoji: '🍘' },
+        { label: 'Whole Grain Crackers', emoji: '🍘' },
+        { label: 'Trail Mix', emoji: '🥜' },
+        { label: 'Unsweetened Applesauce', emoji: '🍏' },
+        { label: 'Frozen Fruit Pops', emoji: '🧊' },
+        { label: 'Small Dark Chocolate Square', emoji: '🍫' }
+      ]
+    }
+  ];
+
+  var MEAL_EMOJI = { Breakfast: '🌅', Lunch: '🥗', Snack: '🍎', Dinner: '🌙' };
+  var AFFIRMATIONS = ['Nice pick!', 'Great choice!', 'Way to go!', 'Heart-smart!', 'Nice one!', 'Awesome!', 'You got this!'];
+  var CONFETTI_EMOJI = ['🎉', '⭐', '🥳', '✨', '🍎', '💪'];
+
+  var state = loadState();
+  var activeCategoryIndex = 0;
+  var expandedBuckets = {};
+  var dragState = null;
+  var wasDragging = false;
+  var wasDayComplete = false;
+
+  var ghostEl = document.getElementById('drag-ghost');
+  var liveEl = document.getElementById('live-status');
+
+  function freshState() {
+    var meals = {};
+    MEALS.forEach(function (meal) { meals[meal] = []; });
+    return { version: 2, meals: meals, selectedMeal: 'Breakfast' };
+  }
+
+  function loadState() {
+    try {
+      var raw = localStorage.getItem(STORAGE_KEY);
+      if (!raw) return freshState();
+      var parsed = JSON.parse(raw);
+      if (!parsed || parsed.version !== 2 || !parsed.meals) return freshState();
+      MEALS.forEach(function (meal) {
+        if (!Array.isArray(parsed.meals[meal])) parsed.meals[meal] = [];
+      });
+      if (MEALS.indexOf(parsed.selectedMeal) === -1) parsed.selectedMeal = 'Breakfast';
+      return parsed;
+    } catch (e) {
+      return freshState();
+    }
+  }
+
+  function saveState() {
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+  }
+
+  function uid() {
+    if (window.crypto && crypto.randomUUID) return crypto.randomUUID();
+    return 'id-' + Date.now() + '-' + Math.random().toString(16).slice(2);
+  }
+
+  function escapeHtml(str) {
+    var div = document.createElement('div');
+    div.textContent = str;
+    return div.innerHTML;
+  }
+
+  function findSlotEl(meal) {
+    return document.querySelector('.slot[data-meal="' + meal + '"]');
+  }
+
+  function announce(text) {
+    liveEl.textContent = '';
+    requestAnimationFrame(function () { liveEl.textContent = text; });
+  }
+
+  function randomAffirmation() {
+    return AFFIRMATIONS[Math.floor(Math.random() * AFFIRMATIONS.length)];
+  }
+
+  function showAffirmBubble(bucketEl, text) {
+    if (!bucketEl) return;
+    var rect = bucketEl.getBoundingClientRect();
+    var bubble = document.createElement('div');
+    bubble.className = 'affirm-bubble';
+    bubble.textContent = text;
+    bubble.style.left = (rect.left + rect.width / 2) + 'px';
+    bubble.style.top = rect.top + 'px';
+    document.body.appendChild(bubble);
+    bubble.addEventListener('animationend', function () { bubble.remove(); });
+  }
+
+  function isDayComplete() {
+    return MEALS.every(function (meal) { return state.meals[meal].length > 0; });
+  }
+
+  function celebrateConfetti() {
+    var layer = document.getElementById('confetti-layer');
+    for (var i = 0; i < 24; i++) {
+      var piece = document.createElement('span');
+      piece.className = 'confetti-piece';
+      piece.textContent = CONFETTI_EMOJI[Math.floor(Math.random() * CONFETTI_EMOJI.length)];
+      piece.style.left = (Math.random() * 100) + 'vw';
+      piece.style.animationDuration = (1.6 + Math.random() * 1.2) + 's';
+      piece.style.animationDelay = (Math.random() * 0.4) + 's';
+      layer.appendChild(piece);
+      piece.addEventListener('animationend', function () { this.remove(); });
+    }
+  }
+
+  function updateDayComplete() {
+    var complete = isDayComplete();
+    document.getElementById('day-complete-banner').hidden = !complete;
+    if (complete && !wasDayComplete) celebrateConfetti();
+    wasDayComplete = complete;
+  }
+
+  // ---------- Rendering ----------
+
+  function chipItemsHtml(meal, items) {
+    return items.map(function (item) {
+      return '<span class="chip">' + item.emoji + ' ' + escapeHtml(item.label) +
+        '<button type="button" class="remove" data-meal="' + meal + '" data-id="' + item.id + '" aria-label="Remove ' + escapeHtml(item.label) + '">×</button></span>';
+    }).join('');
+  }
+
+  function bucketPreviewHtml(items) {
+    if (!items.length) return '<span class="bucket-empty">Empty</span>';
+    var shown = items.slice(0, 3).map(function (i) { return i.emoji; }).join('');
+    var extra = items.length > 3 ? ' +' + (items.length - 3) : '';
+    return '<span class="bucket-preview-emojis">' + shown + extra + '</span>';
+  }
+
+  function renderMeals() {
+    var container = document.getElementById('meals');
+    container.innerHTML = MEALS.map(function (meal) {
+      var items = state.meals[meal];
+      var selected = meal === state.selectedMeal;
+      var open = !!expandedBuckets[meal];
+      var classes = 'slot' + (selected ? ' is-selected' : '');
+      var detailHtml = items.length
+        ? '<div class="chip-list">' + chipItemsHtml(meal, items) + '</div>'
+        : '<span class="bucket-detail-empty">Ready for your picks!</span>';
+      return '<div class="' + classes + '" data-meal="' + meal + '" data-open="' + open + '" ' +
+          'role="radio" aria-checked="' + selected + '" tabindex="0" ' +
+          'aria-label="' + meal + ' meal, ' + items.length + ' foods added">' +
+        '<div class="bucket-summary">' +
+          '<span class="slot-label">' + (selected ? '✓ ' : '') + MEAL_EMOJI[meal] + ' ' + meal + '</span>' +
+          '<button type="button" class="bucket-toggle" aria-expanded="' + open + '" aria-label="Review ' + meal + ' foods">' +
+            bucketPreviewHtml(items) +
+            '<span class="chevron">▾</span>' +
+          '</button>' +
+        '</div>' +
+        '<div class="bucket-detail">' + detailHtml + '</div>' +
+      '</div>';
+    }).join('');
+    updateDayComplete();
+  }
+
+  function renderCategoryTabs() {
+    var container = document.getElementById('category-tabs');
+    container.innerHTML = CATEGORIES.map(function (cat, ci) {
+      var selected = ci === activeCategoryIndex;
+      var style = selected ? ' style="background:' + cat.color + '; color:#fff;"' : '';
+      return '<button type="button" class="tab-btn" role="tab" data-cat="' + ci + '" aria-selected="' + selected + '"' + style + '>' +
+        cat.emoji + ' ' + escapeHtml(cat.name) +
+      '</button>';
+    }).join('');
+  }
+
+  function renderFoodGrid() {
+    var cat = CATEGORIES[activeCategoryIndex];
+    var container = document.getElementById('food-grid');
+    container.setAttribute('aria-label', cat.name + ' foods');
+    container.innerHTML = cat.items.map(function (item, ii) {
+      return '<button type="button" class="food-btn" data-item="' + ii + '" ' +
+        'aria-label="Add ' + escapeHtml(item.label) + ' to ' + state.selectedMeal + '">' +
+        '<span>' + item.emoji + '</span><span>' + escapeHtml(item.label) + '</span>' +
+      '</button>';
+    }).join('');
+  }
+
+  // ---------- Actions ----------
+
+  function addItemToMeal(meal, label, emoji) {
+    state.meals[meal].push({ id: uid(), label: label, emoji: emoji });
+    saveState();
+  }
+
+  function removeItem(meal, id) {
+    state.meals[meal] = state.meals[meal].filter(function (item) { return item.id !== id; });
+    saveState();
+  }
+
+  function selectMeal(meal) {
+    if (state.selectedMeal === meal) return;
+    state.selectedMeal = meal;
+    saveState();
+    renderMeals();
+    renderFoodGrid();
+  }
+
+  function startOver() {
+    if (!confirm('Ready to plan a fresh healthy day? This clears your current plan.')) return;
+    state = freshState();
+    expandedBuckets = {};
+    saveState();
+    renderMeals();
+    renderFoodGrid();
+  }
+
+  // ---------- Drag ghost helpers ----------
+
+  function positionGhost(x, y) {
+    var w = ghostEl.offsetWidth;
+    var h = ghostEl.offsetHeight;
+    ghostEl.style.transform = 'translate3d(' + (x - w / 2) + 'px,' + (y - h / 2 - 40) + 'px,0)';
+  }
+
+  function startGhost(item, originRect) {
+    ghostEl.innerHTML = '<span class="ghost-chip">' + item.emoji + ' ' + escapeHtml(item.label) + '</span>';
+    ghostEl.style.opacity = '1';
+    ghostEl.hidden = false;
+    positionGhost(originRect.left + originRect.width / 2, originRect.top + originRect.height / 2);
+  }
+
+  function moveGhost(x, y) {
+    positionGhost(x, y);
+  }
+
+  function dropGhostInto(bucketEl) {
+    var rect = bucketEl.getBoundingClientRect();
+    positionGhost(rect.left + rect.width / 2, rect.top + rect.height / 2);
+    ghostEl.style.opacity = '0';
+    setTimeout(function () {
+      ghostEl.hidden = true;
+      ghostEl.style.opacity = '1';
+    }, 220);
+  }
+
+  function snapGhostBack(originRect) {
+    positionGhost(originRect.left + originRect.width / 2, originRect.top + originRect.height / 2);
+    setTimeout(function () {
+      ghostEl.hidden = true;
+    }, 220);
+  }
+
+  function pulseBucket(meal) {
+    var el = findSlotEl(meal);
+    if (!el) return;
+    el.classList.remove('bucket-pulse');
+    void el.offsetWidth;
+    el.classList.add('bucket-pulse');
+  }
+
+  // ---------- Drag/tap on food buttons ----------
+
+  function onPointerMove(e) {
+    if (!dragState || e.pointerId !== dragState.pointerId) return;
+    var dx = e.clientX - dragState.startX;
+    var dy = e.clientY - dragState.startY;
+
+    if (dragState.phase === 'pressed') {
+      if (Math.hypot(dx, dy) < DRAG_THRESHOLD) return;
+      dragState.phase = 'dragging';
+      startGhost(dragState.item, dragState.originRect);
+      dragState.btn.classList.add('is-lifted');
+      document.body.classList.add('dragging');
+    }
+
+    if (dragState.phase === 'dragging') {
+      moveGhost(e.clientX, e.clientY);
+      var el = document.elementFromPoint(e.clientX, e.clientY);
+      var bucket = el ? el.closest('.slot') : null;
+      if (bucket !== dragState.hoverBucket) {
+        if (dragState.hoverBucket) dragState.hoverBucket.classList.remove('is-drop-target');
+        if (bucket) bucket.classList.add('is-drop-target');
+        dragState.hoverBucket = bucket;
+      }
+    }
+  }
+
+  function cleanupDrag(ds) {
+    ds.btn.removeEventListener('pointermove', onPointerMove);
+    ds.btn.removeEventListener('pointerup', onPointerUp);
+    ds.btn.removeEventListener('pointercancel', onPointerCancel);
+    try { ds.btn.releasePointerCapture(ds.pointerId); } catch (err) { /* no-op */ }
+    dragState = null;
+  }
+
+  function onPointerUp(e) {
+    if (!dragState || e.pointerId !== dragState.pointerId) return;
+    var ds = dragState;
+    var wasDrag = ds.phase === 'dragging';
+    wasDragging = wasDrag;
+    cleanupDrag(ds);
+    // Safety net: if the synthetic click after this drag lands outside #food-grid
+    // (e.g. released far from the origin), our click listener never runs and never
+    // resets the flag — without this, the *next* unrelated click gets swallowed.
+    if (wasDrag) setTimeout(function () { wasDragging = false; }, 0);
+
+    if (!wasDrag) return; // pure tap — the click handler will perform the add
+
+    if (ds.hoverBucket) {
+      var meal = ds.hoverBucket.getAttribute('data-meal');
+      addItemToMeal(meal, ds.item.label, ds.item.emoji);
+      state.selectedMeal = meal;
+      saveState();
+      dropGhostInto(ds.hoverBucket);
+      pulseBucket(meal);
+      var dragPraise = randomAffirmation();
+      announce(dragPraise + ' Added ' + ds.item.label + ' to ' + meal + '.');
+      showAffirmBubble(ds.hoverBucket, dragPraise);
+      ds.hoverBucket.classList.remove('is-drop-target');
+    } else {
+      snapGhostBack(ds.originRect);
+    }
+
+    ds.btn.classList.remove('is-lifted');
+    document.body.classList.remove('dragging');
+    renderMeals();
+    renderFoodGrid();
+  }
+
+  function onPointerCancel(e) {
+    if (!dragState || e.pointerId !== dragState.pointerId) return;
+    var ds = dragState;
+    var wasDrag = ds.phase === 'dragging';
+    wasDragging = wasDrag;
+    cleanupDrag(ds);
+    if (wasDrag) setTimeout(function () { wasDragging = false; }, 0);
+
+    if (wasDrag) {
+      snapGhostBack(ds.originRect);
+      ds.btn.classList.remove('is-lifted');
+      document.body.classList.remove('dragging');
+      if (ds.hoverBucket) ds.hoverBucket.classList.remove('is-drop-target');
+    }
+  }
+
+  // ---------- Event wiring ----------
+
+  document.getElementById('food-grid').addEventListener('pointerdown', function (e) {
+    var btn = e.target.closest('.food-btn');
+    if (!btn) return;
+    var ii = Number(btn.getAttribute('data-item'));
+    var item = CATEGORIES[activeCategoryIndex].items[ii];
+    dragState = {
+      pointerId: e.pointerId,
+      btn: btn,
+      item: item,
+      startX: e.clientX,
+      startY: e.clientY,
+      originRect: btn.getBoundingClientRect(),
+      phase: 'pressed',
+      hoverBucket: null
+    };
+    btn.setPointerCapture(e.pointerId);
+    btn.addEventListener('pointermove', onPointerMove);
+    btn.addEventListener('pointerup', onPointerUp);
+    btn.addEventListener('pointercancel', onPointerCancel);
+  });
+
+  document.getElementById('food-grid').addEventListener('click', function (e) {
+    if (wasDragging) {
+      wasDragging = false;
+      return;
+    }
+    var btn = e.target.closest('.food-btn');
+    if (!btn) return;
+    var ii = Number(btn.getAttribute('data-item'));
+    var item = CATEGORIES[activeCategoryIndex].items[ii];
+    addItemToMeal(state.selectedMeal, item.label, item.emoji);
+    renderMeals();
+    var tapPraise = randomAffirmation();
+    announce(tapPraise + ' Added ' + item.label + ' to ' + state.selectedMeal + '.');
+    showAffirmBubble(findSlotEl(state.selectedMeal), tapPraise);
+    btn.classList.remove('added');
+    void btn.offsetWidth;
+    btn.classList.add('added');
+  });
+
+  document.getElementById('category-tabs').addEventListener('click', function (e) {
+    var tab = e.target.closest('.tab-btn');
+    if (!tab) return;
+    var ci = Number(tab.getAttribute('data-cat'));
+    if (ci === activeCategoryIndex) return;
+    activeCategoryIndex = ci;
+    renderCategoryTabs();
+    renderFoodGrid();
+  });
+
+  document.getElementById('meals').addEventListener('click', function (e) {
+    var removeBtn = e.target.closest('button.remove');
+    if (removeBtn) {
+      removeItem(removeBtn.getAttribute('data-meal'), removeBtn.getAttribute('data-id'));
+      renderMeals();
+      return;
+    }
+    var toggleBtn = e.target.closest('.bucket-toggle');
+    if (toggleBtn) {
+      var meal = toggleBtn.closest('.slot').getAttribute('data-meal');
+      expandedBuckets[meal] = !expandedBuckets[meal];
+      renderMeals();
+      return;
+    }
+    var slot = e.target.closest('.slot');
+    if (slot) {
+      selectMeal(slot.getAttribute('data-meal'));
+    }
+  });
+
+  document.getElementById('meals').addEventListener('keydown', function (e) {
+    if (e.key !== 'Enter' && e.key !== ' ' && e.key !== 'Spacebar') return;
+    if (e.target.closest('.bucket-toggle')) return; // native button already handles its own activation
+    var slot = e.target.closest('.slot');
+    if (!slot) return;
+    e.preventDefault();
+    selectMeal(slot.getAttribute('data-meal'));
+  });
+
+  document.getElementById('custom-food-form').addEventListener('submit', function (e) {
+    e.preventDefault();
+    var input = document.getElementById('custom-food-input');
+    var text = input.value.trim();
+    if (!text) return;
+    addItemToMeal(state.selectedMeal, text, '🍽️');
+    renderMeals();
+    var customPraise = randomAffirmation();
+    announce(customPraise + ' Added ' + text + ' to ' + state.selectedMeal + '.');
+    showAffirmBubble(findSlotEl(state.selectedMeal), customPraise);
+    input.value = '';
+    input.focus();
+  });
+
+  document.getElementById('print-btn').addEventListener('click', function () {
+    window.print();
+  });
+
+  document.getElementById('clear-btn').addEventListener('click', startOver);
+
+  // ---------- Init ----------
+
+  renderCategoryTabs();
+  renderFoodGrid();
+  renderMeals();
+
+  if ('serviceWorker' in navigator) {
+    navigator.serviceWorker.register('sw.js').catch(function () { /* offline support is best-effort */ });
+  }
+})();
+</script>
+
+</body>
+</html>
