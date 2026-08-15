@@ -1,6 +1,6 @@
 'use strict';
 
-var CACHE_NAME = 'arie-plan-v1';
+var CACHE_NAME = 'arie-plan-v2';
 var PRECACHE_URLS = [
   './',
   './index.html',
@@ -46,6 +46,16 @@ self.addEventListener('fetch', function (event) {
     // repo has gone private and Pages stops serving it).
     event.respondWith(
       fetch(request).then(function (response) {
+        // fetch() only rejects on true network failures — an HTTP error
+        // status (e.g. 404, once the repo goes private) still resolves
+        // "successfully" here, so it must be checked explicitly. Trusting
+        // and caching a non-OK response would overwrite the good cached
+        // copy with the error page.
+        if (!response.ok) {
+          return caches.match(request).then(function (cached) {
+            return cached || caches.match('./index.html') || response;
+          });
+        }
         var copy = response.clone();
         caches.open(CACHE_NAME).then(function (cache) { cache.put(request, copy); });
         return response;
@@ -62,8 +72,10 @@ self.addEventListener('fetch', function (event) {
       caches.match(request).then(function (cached) {
         if (cached) return cached;
         return fetch(request).then(function (response) {
-          var copy = response.clone();
-          caches.open(CACHE_NAME).then(function (cache) { cache.put(request, copy); });
+          if (response.ok) {
+            var copy = response.clone();
+            caches.open(CACHE_NAME).then(function (cache) { cache.put(request, copy); });
+          }
           return response;
         });
       })
