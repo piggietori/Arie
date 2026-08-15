@@ -1149,6 +1149,10 @@
   renderCategoryTabs();
   renderFoodGrid();
   renderMeals();
+
+  if ('serviceWorker' in navigator) {
+    navigator.serviceWorker.register('sw.js').catch(function () { /* offline support is best-effort */ });
+  }
 })();
 </script>
 
