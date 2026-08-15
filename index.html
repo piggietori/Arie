@@ -46,6 +46,10 @@
     padding-bottom: 6rem;
   }
 
+  body.sheet-open {
+    overflow: hidden;
+  }
+
   h1, h2, h3, button {
     font-family: 'Fredoka', sans-serif;
   }
@@ -69,65 +73,7 @@
     color: #6b6b6b;
   }
 
-  /* ---------- Sticky active-slot bar ---------- */
-
-  #active-slot-bar {
-    position: sticky;
-    top: 0;
-    z-index: 20;
-    background: var(--white);
-    border-bottom: 3px solid #FFE1A8;
-    box-shadow: 0 4px 14px var(--shadow);
-    padding: 0.85rem 1rem;
-    display: flex;
-    flex-wrap: wrap;
-    align-items: center;
-    justify-content: center;
-    gap: 0.75rem;
-  }
-
-  #active-slot-label {
-    font-family: 'Fredoka', sans-serif;
-    font-weight: 600;
-    font-size: 1.05rem;
-    background: #FFF3D6;
-    border-radius: 999px;
-    padding: 0.5rem 1.1rem;
-    white-space: nowrap;
-  }
-
-  #active-slot-label.is-empty {
-    background: #F0F0F0;
-    color: #888;
-  }
-
-  #custom-food-form {
-    display: flex;
-    gap: 0.5rem;
-  }
-
-  #custom-food-input {
-    font-family: 'Nunito', sans-serif;
-    font-size: 1rem;
-    font-weight: 700;
-    padding: 0.6rem 1rem;
-    border: 2px solid #FFD37A;
-    border-radius: 999px;
-    min-height: 44px;
-    min-width: 180px;
-    background: var(--white);
-  }
-
-  #custom-food-input:disabled {
-    background: #F2F2F2;
-    border-color: #DDD;
-    color: #999;
-    cursor: not-allowed;
-  }
-
-  #custom-food-input:focus {
-    outline: 3px solid var(--breakfast);
-  }
+  /* ---------- Shared button/input styles ---------- */
 
   .btn {
     font-family: 'Fredoka', sans-serif;
@@ -147,16 +93,35 @@
     box-shadow: 0 1px 0 rgba(0, 0, 0, 0.15);
   }
 
-  .btn:disabled {
-    background: #DDD !important;
-    color: #999 !important;
-    cursor: not-allowed;
-    box-shadow: none;
+  .btn:focus-visible,
+  .food-btn:focus-visible,
+  .slot:focus-visible,
+  #custom-food-input:focus-visible {
+    outline: 3px solid var(--breakfast);
+    outline-offset: 2px;
   }
 
   .btn-add {
     background: var(--lunch);
     color: var(--white);
+  }
+
+  #custom-food-form {
+    display: flex;
+    gap: 0.5rem;
+  }
+
+  #custom-food-input {
+    font-family: 'Nunito', sans-serif;
+    font-size: 1rem;
+    font-weight: 700;
+    padding: 0.6rem 1rem;
+    border: 2px solid #FFD37A;
+    border-radius: 999px;
+    min-height: 44px;
+    flex: 1 1 auto;
+    min-width: 0;
+    background: var(--white);
   }
 
   /* ---------- Layout ---------- */
@@ -165,18 +130,15 @@
     max-width: 900px;
     margin: 0 auto;
     padding: 1.5rem 1rem;
-    display: flex;
-    flex-direction: column;
-    gap: 2rem;
   }
 
-  /* ---------- Food picker ---------- */
-
-  #picker h2, #week-grid h2 {
+  #week-grid h2 {
     font-size: 1.4rem;
     margin-bottom: 0.75rem;
     text-align: center;
   }
+
+  /* ---------- Food categories (reused inside the sheet) ---------- */
 
   .category {
     background: var(--white);
@@ -238,12 +200,22 @@
     gap: 0.4rem;
   }
 
-  .food-btn:hover, .food-btn:focus-visible {
+  .food-btn:hover {
     background: #FFEFC8;
   }
 
   .food-btn:active {
     transform: scale(0.94);
+  }
+
+  @keyframes food-added-pulse {
+    0%   { transform: scale(1); background: #FFF9EC; }
+    40%  { transform: scale(1.12); background: #D9F5DC; }
+    100% { transform: scale(1); background: #FFF9EC; }
+  }
+
+  .food-btn.added {
+    animation: food-added-pulse 0.4s ease;
   }
 
   /* ---------- Weekly grid ---------- */
@@ -355,6 +327,11 @@
     background: var(--white);
     box-shadow: 0 -4px 14px var(--shadow);
     z-index: 20;
+    transition: transform 0.2s ease;
+  }
+
+  body.sheet-open footer#controls {
+    transform: translateY(120%);
   }
 
   .btn-print {
@@ -367,41 +344,91 @@
     color: var(--white);
   }
 
-  /* ---------- Toast ---------- */
+  /* ---------- Bottom-sheet food picker ---------- */
 
-  #toast {
+  #sheet-backdrop {
     position: fixed;
-    bottom: 5.5rem;
-    left: 50%;
-    transform: translateX(-50%) translateY(20px);
-    background: var(--ink);
-    color: var(--white);
-    font-family: 'Fredoka', sans-serif;
-    font-weight: 600;
-    padding: 0.75rem 1.25rem;
-    border-radius: 999px;
-    box-shadow: 0 4px 14px var(--shadow);
+    inset: 0;
+    background: rgba(0, 0, 0, 0.45);
+    z-index: 40;
     opacity: 0;
-    pointer-events: none;
-    transition: opacity 0.2s ease, transform 0.2s ease;
-    z-index: 30;
-    white-space: nowrap;
+    transition: opacity 0.25s ease;
   }
 
-  #toast.show {
+  #sheet-backdrop.open {
     opacity: 1;
-    transform: translateX(-50%) translateY(0);
   }
 
-  @keyframes shake {
-    10%, 90% { transform: translateX(-2px); }
-    20%, 80% { transform: translateX(3px); }
-    30%, 50%, 70% { transform: translateX(-5px); }
-    40%, 60% { transform: translateX(5px); }
+  #sheet {
+    position: fixed;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    z-index: 41;
+    background: var(--bg);
+    border-radius: 24px 24px 0 0;
+    box-shadow: 0 -6px 24px var(--shadow);
+    max-height: 85vh;
+    display: flex;
+    flex-direction: column;
+    transform: translateY(100%);
+    transition: transform 0.28s cubic-bezier(.2, .8, .2, 1);
   }
 
-  #week-grid.shake {
-    animation: shake 0.4s;
+  #sheet.open {
+    transform: translateY(0);
+  }
+
+  #sheet[hidden] {
+    display: none;
+  }
+
+  .sheet-handle {
+    width: 44px;
+    height: 5px;
+    border-radius: 999px;
+    background: #E8E0C8;
+    margin: 0.6rem auto 0;
+    flex: 0 0 auto;
+  }
+
+  .sheet-header {
+    flex: 0 0 auto;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.75rem;
+    padding: 0.75rem 1.25rem;
+  }
+
+  .sheet-header h2 {
+    font-size: 1.2rem;
+    min-width: 0;
+  }
+
+  .sheet-current {
+    flex: 0 0 auto;
+    padding: 0 1.25rem 0.85rem;
+  }
+
+  .sheet-chip-empty {
+    font-size: 0.85rem;
+    font-weight: 700;
+    color: #888;
+  }
+
+  .sheet-scroll {
+    flex: 1 1 auto;
+    overflow-y: auto;
+    -webkit-overflow-scrolling: touch;
+    padding: 0 1.25rem;
+  }
+
+  .sheet-footer {
+    flex: 0 0 auto;
+    padding: 0.85rem 1.25rem calc(0.85rem + env(safe-area-inset-bottom, 0px));
+    border-top: 1px solid #F1E6C8;
+    background: var(--bg);
   }
 
   /* ---------- Print ---------- */
@@ -412,7 +439,7 @@
       margin: 1cm;
     }
 
-    #active-slot-bar, #picker, footer#controls, #toast, header.hero p,
+    #sheet, #sheet-backdrop, footer#controls, header.hero p,
     .chip button.remove {
       display: none !important;
     }
@@ -452,23 +479,10 @@
 
 <header class="hero">
   <h1>🥗 My Super Healthy Week 🌟</h1>
-  <p>Tap a meal box, then tap foods below to add them!</p>
+  <p>Tap a meal box to pick foods for it!</p>
 </header>
 
-<div id="active-slot-bar">
-  <span id="active-slot-label" class="is-empty">Tap a meal box to start!</span>
-  <form id="custom-food-form" autocomplete="off">
-    <input id="custom-food-input" type="text" placeholder="Add your own food..." maxlength="40" disabled>
-    <button type="submit" class="btn btn-add" id="custom-food-submit" disabled>Add ➕</button>
-  </form>
-</div>
-
 <main class="layout">
-  <section id="picker" aria-label="Food picker">
-    <h2>Pick some yummy foods 👇</h2>
-    <div id="categories"></div>
-  </section>
-
   <section id="week-grid" aria-label="Weekly plan">
     <h2>Your Weekly Plan 📅</h2>
     <div id="days"></div>
@@ -480,7 +494,30 @@
   <button class="btn btn-clear" id="clear-btn">🗑️ Clear week</button>
 </footer>
 
-<div id="toast"></div>
+<div id="sheet-backdrop" hidden></div>
+
+<div id="sheet" role="dialog" aria-modal="true" aria-labelledby="sheet-title" hidden>
+  <div class="sheet-handle" aria-hidden="true"></div>
+  <div class="sheet-header">
+    <h2 id="sheet-title">Breakfast · Monday</h2>
+    <button type="button" class="btn btn-print" id="sheet-done">Done ✓</button>
+  </div>
+
+  <div class="sheet-current">
+    <div id="sheet-chip-list" class="chip-list" aria-label="Foods already added" aria-live="polite"></div>
+  </div>
+
+  <div class="sheet-scroll">
+    <div id="categories"></div>
+  </div>
+
+  <div class="sheet-footer">
+    <form id="custom-food-form" autocomplete="off">
+      <input id="custom-food-input" type="text" placeholder="Add your own food..." maxlength="40">
+      <button type="submit" class="btn btn-add" id="custom-food-submit">Add ➕</button>
+    </form>
+  </div>
+</div>
 
 <script>
 (function () {
@@ -489,6 +526,7 @@
   var STORAGE_KEY = 'kidMealPlanner:v1';
   var DAYS = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'];
   var MEALS = ['Breakfast', 'Lunch', 'Snack', 'Dinner'];
+  var SHEET_TRANSITION_MS = 280;
 
   var CATEGORIES = [
     {
@@ -607,7 +645,8 @@
   var MEAL_EMOJI = { Breakfast: '🌅', Lunch: '🥗', Snack: '🍎', Dinner: '🌙' };
 
   var state = loadState();
-  var activeSlot = null; // { day, meal }
+  var activeSlot = null; // { day, meal } — only set while the sheet is open
+  var sheetCloseTimer = null;
 
   function freshState() {
     var days = {};
@@ -652,7 +691,18 @@
     return div.innerHTML;
   }
 
+  function findSlotEl(day, meal) {
+    return document.querySelector('.slot[data-day="' + day + '"][data-meal="' + meal + '"]');
+  }
+
   // ---------- Rendering ----------
+
+  function chipItemsHtml(day, meal, items) {
+    return items.map(function (item) {
+      return '<span class="chip">' + item.emoji + ' ' + escapeHtml(item.label) +
+        '<button type="button" class="remove" data-day="' + day + '" data-meal="' + meal + '" data-id="' + item.id + '" aria-label="Remove ' + escapeHtml(item.label) + '">×</button></span>';
+    }).join('');
+  }
 
   function renderCategories() {
     var container = document.getElementById('categories');
@@ -676,14 +726,11 @@
     container.innerHTML = DAYS.map(function (day) {
       var mealsHtml = MEALS.map(function (meal) {
         var items = state.days[day][meal];
-        var isActive = activeSlot && activeSlot.day === day && activeSlot.meal === meal;
         var chipsHtml = items.length
-          ? '<div class="chip-list">' + items.map(function (item) {
-              return '<span class="chip">' + item.emoji + ' ' + escapeHtml(item.label) +
-                '<button type="button" class="remove" data-day="' + day + '" data-meal="' + meal + '" data-id="' + item.id + '" aria-label="Remove">×</button></span>';
-            }).join('') + '</div>'
+          ? '<div class="chip-list">' + chipItemsHtml(day, meal, items) + '</div>'
           : '<span class="slot-empty">Tap here, then pick a food!</span>';
-        return '<div class="slot' + (isActive ? ' is-active' : '') + '" data-day="' + day + '" data-meal="' + meal + '">' +
+        return '<div class="slot" data-day="' + day + '" data-meal="' + meal + '" tabindex="0" role="button" ' +
+          'aria-label="' + meal + ', ' + day + '. Tap to add foods.">' +
           '<span class="slot-label">' + MEAL_EMOJI[meal] + ' ' + meal + '</span>' +
           chipsHtml +
         '</div>';
@@ -695,75 +742,87 @@
     }).join('');
   }
 
-  function renderActiveSlotBar() {
-    var label = document.getElementById('active-slot-label');
-    var input = document.getElementById('custom-food-input');
-    var submit = document.getElementById('custom-food-submit');
-    if (activeSlot) {
-      label.textContent = 'Adding to: ' + activeSlot.day + ' · ' + activeSlot.meal;
-      label.classList.remove('is-empty');
-      input.disabled = false;
-      submit.disabled = false;
-    } else {
-      label.textContent = 'Tap a meal box to start!';
-      label.classList.add('is-empty');
-      input.disabled = true;
-      submit.disabled = true;
-    }
+  function renderSheetChips() {
+    if (!activeSlot) return;
+    var items = state.days[activeSlot.day][activeSlot.meal];
+    var container = document.getElementById('sheet-chip-list');
+    container.innerHTML = items.length
+      ? chipItemsHtml(activeSlot.day, activeSlot.meal, items)
+      : '<span class="sheet-chip-empty">Nothing added yet — tap a food below!</span>';
   }
 
-  function renderAll() {
+  // ---------- Sheet open/close ----------
+
+  function openSheet(day, meal) {
+    activeSlot = { day: day, meal: meal };
+
+    document.getElementById('sheet-title').textContent = MEAL_EMOJI[meal] + ' ' + meal + ' · ' + day;
+    renderSheetChips();
+    document.getElementById('custom-food-input').value = '';
+
+    document.querySelectorAll('.category').forEach(function (cat) {
+      cat.setAttribute('data-open', 'false');
+    });
+
+    var slotEl = findSlotEl(day, meal);
+    if (slotEl) slotEl.classList.add('is-active');
+
+    clearTimeout(sheetCloseTimer);
+    var backdrop = document.getElementById('sheet-backdrop');
+    var sheet = document.getElementById('sheet');
+    backdrop.hidden = false;
+    sheet.hidden = false;
+    document.body.classList.add('sheet-open');
+
+    void sheet.offsetHeight; // force layout so the transition below animates
+    backdrop.classList.add('open');
+    sheet.classList.add('open');
+
+    document.getElementById('sheet-done').focus();
+  }
+
+  function closeSheet() {
+    if (!activeSlot) return;
+    var day = activeSlot.day;
+    var meal = activeSlot.meal;
+
+    var backdrop = document.getElementById('sheet-backdrop');
+    var sheet = document.getElementById('sheet');
+    backdrop.classList.remove('open');
+    sheet.classList.remove('open');
+    document.body.classList.remove('sheet-open');
+
+    clearTimeout(sheetCloseTimer);
+    sheetCloseTimer = setTimeout(function () {
+      backdrop.hidden = true;
+      sheet.hidden = true;
+    }, SHEET_TRANSITION_MS);
+
+    activeSlot = null;
     renderDays();
-    renderActiveSlotBar();
-  }
 
-  // ---------- Toast ----------
-
-  var toastTimer = null;
-  function showToast(msg) {
-    var toast = document.getElementById('toast');
-    toast.textContent = msg;
-    toast.classList.add('show');
-    clearTimeout(toastTimer);
-    toastTimer = setTimeout(function () { toast.classList.remove('show'); }, 2200);
-
-    var grid = document.getElementById('week-grid');
-    grid.classList.remove('shake');
-    void grid.offsetWidth;
-    grid.classList.add('shake');
+    var slotEl = findSlotEl(day, meal);
+    if (slotEl) slotEl.focus();
   }
 
   // ---------- Actions ----------
 
-  function addItemToActiveSlot(label, emoji) {
-    if (!activeSlot) {
-      showToast('Tap a meal box first! 👆');
-      return;
-    }
+  function addItemToSlot(label, emoji) {
     state.days[activeSlot.day][activeSlot.meal].push({ id: uid(), label: label, emoji: emoji });
     saveState();
-    renderDays();
+    renderSheetChips();
   }
 
   function removeItem(day, meal, id) {
     state.days[day][meal] = state.days[day][meal].filter(function (item) { return item.id !== id; });
     saveState();
-    renderDays();
-  }
-
-  function setActiveSlot(day, meal) {
-    activeSlot = { day: day, meal: meal };
-    renderDays();
-    renderActiveSlotBar();
-    document.getElementById('custom-food-input').focus();
   }
 
   function clearWeek() {
     if (!confirm('Clear the whole week and start fresh?')) return;
     state = freshState();
     saveState();
-    activeSlot = null;
-    renderAll();
+    renderDays();
   }
 
   // ---------- Event wiring ----------
@@ -781,7 +840,10 @@
       var ci = Number(foodBtn.getAttribute('data-cat'));
       var ii = Number(foodBtn.getAttribute('data-item'));
       var item = CATEGORIES[ci].items[ii];
-      addItemToActiveSlot(item.label, item.emoji);
+      addItemToSlot(item.label, item.emoji);
+      foodBtn.classList.remove('added');
+      void foodBtn.offsetWidth; // restart animation if tapped repeatedly
+      foodBtn.classList.add('added');
     }
   });
 
@@ -789,12 +851,28 @@
     var removeBtn = e.target.closest('button.remove');
     if (removeBtn) {
       removeItem(removeBtn.getAttribute('data-day'), removeBtn.getAttribute('data-meal'), removeBtn.getAttribute('data-id'));
+      renderDays();
       return;
     }
     var slot = e.target.closest('.slot');
     if (slot) {
-      setActiveSlot(slot.getAttribute('data-day'), slot.getAttribute('data-meal'));
+      openSheet(slot.getAttribute('data-day'), slot.getAttribute('data-meal'));
     }
+  });
+
+  document.getElementById('days').addEventListener('keydown', function (e) {
+    if (e.key !== 'Enter' && e.key !== ' ' && e.key !== 'Spacebar') return;
+    var slot = e.target.closest('.slot');
+    if (!slot) return;
+    e.preventDefault();
+    openSheet(slot.getAttribute('data-day'), slot.getAttribute('data-meal'));
+  });
+
+  document.getElementById('sheet-chip-list').addEventListener('click', function (e) {
+    var removeBtn = e.target.closest('button.remove');
+    if (!removeBtn) return;
+    removeItem(removeBtn.getAttribute('data-day'), removeBtn.getAttribute('data-meal'), removeBtn.getAttribute('data-id'));
+    renderSheetChips();
   });
 
   document.getElementById('custom-food-form').addEventListener('submit', function (e) {
@@ -802,13 +880,16 @@
     var input = document.getElementById('custom-food-input');
     var text = input.value.trim();
     if (!text) return;
-    if (!activeSlot) {
-      showToast('Tap a meal box first! 👆');
-      return;
-    }
-    addItemToActiveSlot(text, '🍽️');
+    addItemToSlot(text, '🍽️');
     input.value = '';
     input.focus();
+  });
+
+  document.getElementById('sheet-done').addEventListener('click', closeSheet);
+  document.getElementById('sheet-backdrop').addEventListener('click', closeSheet);
+
+  document.addEventListener('keydown', function (e) {
+    if (e.key === 'Escape' && !document.getElementById('sheet').hidden) closeSheet();
   });
 
   document.getElementById('print-btn').addEventListener('click', function () {
@@ -820,7 +901,7 @@
   // ---------- Init ----------
 
   renderCategories();
-  renderAll();
+  renderDays();
 })();
 </script>
 
