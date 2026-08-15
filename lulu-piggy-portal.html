@@ -1,0 +1,942 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
+<title>Lulu's Portal Adventure</title>
+<style>
+  :root{
+    --cloud-1:#ffd6ec; --cloud-2:#ffb3de; --cloud-3:#c9a2ff;
+    --star-1:#241b4e; --star-2:#3a2a7d; --star-3:#ffe066;
+    --ocean-1:#8fe3ff; --ocean-2:#3aa6d8; --ocean-3:#1c6fa8;
+    --meadow-1:#c9f2a0; --meadow-2:#8fd66b; --meadow-3:#ffd76b;
+    --ink:#4a3b52; --paper:#fff8fb; --accent:#ff7fb0; --accent-dark:#e75a95;
+    --radius:20px;
+  }
+  *{box-sizing:border-box; -webkit-tap-highlight-color:transparent;}
+  html,body{
+    margin:0; padding:0; height:100%;
+    font-family:'Comic Sans MS','Chalkboard SE','Arial Rounded MT Bold',ui-rounded,sans-serif;
+    background:#2a1f3d;
+    color:var(--ink);
+    overscroll-behavior:none;
+    touch-action:manipulation;
+  }
+  #app{
+    position:relative;
+    min-height:100vh;
+    min-height:100dvh;
+    max-width:520px;
+    min-width:320px;
+    margin:0 auto;
+    background:var(--paper);
+    overflow:hidden;
+    display:flex;
+    flex-direction:column;
+    box-shadow:0 0 40px rgba(0,0,0,.4);
+  }
+  button{font-family:inherit; border:none; cursor:pointer;}
+  button:focus-visible, .item:focus-visible, .friend:focus-visible{outline:3px solid #fff; outline-offset:2px;}
+  h1,h2,h3,p{margin:0;}
+
+  /* HUD */
+  #hud{
+    display:flex; align-items:center; gap:8px;
+    padding:8px 10px;
+    background:linear-gradient(180deg,#ffe1f2,#ffd0ea);
+    border-bottom:3px solid #ffb3de;
+    flex:0 0 auto;
+    z-index:20;
+    position:relative;
+  }
+  #hud-title{
+    font-weight:bold; font-size:clamp(12px,3.6vw,16px);
+    color:var(--accent-dark);
+    flex:1;
+    line-height:1.1;
+  }
+  #badge-tray{display:flex; gap:4px;}
+  .badge-slot{
+    width:30px; height:30px; border-radius:50%;
+    background:#fff; border:2px dashed #e7a9cd;
+    display:flex; align-items:center; justify-content:center;
+    font-size:16px;
+    transition:transform .3s ease, background .3s ease;
+  }
+  .badge-slot.earned{
+    border-style:solid; border-color:var(--accent-dark);
+    background:#fff2f9;
+    animation:badgePop .5s ease;
+  }
+  @keyframes badgePop{
+    0%{transform:scale(0.3) rotate(-20deg);}
+    60%{transform:scale(1.25) rotate(8deg);}
+    100%{transform:scale(1) rotate(0deg);}
+  }
+  #sound-toggle{
+    width:34px; height:34px; border-radius:50%;
+    background:#fff; font-size:16px;
+    display:flex; align-items:center; justify-content:center;
+    box-shadow:0 2px 0 #e7a9cd;
+  }
+  #sound-toggle:active{transform:translateY(2px); box-shadow:none;}
+
+  /* Stage */
+  #stage{position:relative; flex:1; display:flex; flex-direction:column; min-height:0;}
+  .screen{
+    display:none;
+    flex:1;
+    flex-direction:column;
+    min-height:0;
+    padding:16px;
+    text-align:center;
+    align-items:center;
+    justify-content:center;
+    gap:14px;
+    overflow-y:auto;
+  }
+  .screen.active{display:flex;}
+
+  /* Title */
+  #screen-title{background:linear-gradient(180deg,#fff0f8,#ffe0f0);}
+  .lulu-portrait{
+    width:min(56vw,220px); height:min(56vw,220px);
+    border-radius:50%;
+    border:6px solid #fff;
+    box-shadow:0 6px 18px rgba(230,90,150,.35);
+    background:radial-gradient(circle at 35% 30%,#fff,#ffd9ee 70%);
+    display:flex; align-items:center; justify-content:center;
+    overflow:hidden;
+    position:relative;
+  }
+  .lulu-portrait img{width:100%; height:100%; object-fit:cover; display:block;}
+  .lulu-portrait svg{width:82%; height:82%;}
+  h1.title-h1{
+    font-size:clamp(22px,7vw,32px);
+    color:var(--accent-dark);
+    text-shadow:1px 1px 0 #fff;
+  }
+  #screen-title p{font-size:clamp(14px,4vw,17px); color:#7a5a70; max-width:360px;}
+
+  .big-button{
+    padding:14px 28px;
+    font-size:clamp(15px,4.2vw,18px);
+    font-weight:bold;
+    color:#fff;
+    background:linear-gradient(180deg,#ff9dc7,var(--accent-dark));
+    border-radius:999px;
+    box-shadow:0 5px 0 #c9457e;
+    min-height:48px;
+    min-width:180px;
+    transition:transform .08s ease, box-shadow .08s ease;
+  }
+  .big-button:active{transform:translateY(4px); box-shadow:0 1px 0 #c9457e;}
+  .big-button:disabled{opacity:.5; box-shadow:none; transform:none;}
+
+  /* Story */
+  #screen-story{background:radial-gradient(circle at 50% 40%,#2a1f4d,#120a24);}
+  #screen-story p, #screen-story h2{color:#fbe9ff;}
+  .story-portal{
+    width:150px; height:150px; border-radius:50%;
+    background:conic-gradient(from 0deg,#ff9dc7,#ffe066,#8fe3ff,#c9a2ff,#ff9dc7);
+    animation:spinPortal 3s linear infinite;
+    box-shadow:0 0 40px 10px rgba(255,150,220,.5);
+    position:relative;
+  }
+  .story-portal::after{
+    content:"";
+    position:absolute; inset:14px;
+    border-radius:50%;
+    background:radial-gradient(circle,#120a24 55%,transparent 100%);
+  }
+  @keyframes spinPortal{ to{ transform:rotate(360deg); } }
+
+  /* Universe screen */
+  #screen-universe{padding:0; justify-content:flex-start; align-items:stretch;}
+  #universe-banner{
+    padding:10px 14px 4px;
+    flex:0 0 auto;
+  }
+  #universe-banner h2{
+    font-size:clamp(17px,5vw,22px);
+    color:var(--accent-dark);
+  }
+  #item-counter{font-size:14px; color:#7a5a70; margin-top:2px;}
+
+  .scene{
+    position:relative;
+    flex:1;
+    min-height:280px;
+    margin:8px 10px;
+    border-radius:var(--radius);
+    overflow:hidden;
+    box-shadow:inset 0 0 0 4px rgba(255,255,255,.6);
+  }
+  .scene.theme-cloud{background:linear-gradient(180deg,var(--cloud-3),var(--cloud-1));}
+  .scene.theme-star{background:radial-gradient(circle at 20% 20%,var(--star-2),var(--star-1) 70%);}
+  .scene.theme-ocean{background:linear-gradient(180deg,var(--ocean-1),var(--ocean-3));}
+  .scene.theme-meadow{background:linear-gradient(180deg,#bdf0ff 0%,#bdf0ff 35%,var(--meadow-1) 35%,var(--meadow-2) 100%);}
+
+  .deco{position:absolute; pointer-events:none; opacity:.85;}
+  .theme-cloud .deco.puff{
+    background:#fff; border-radius:50%;
+  }
+  .theme-star .deco.star-dot{
+    background:#fff; border-radius:50%;
+    box-shadow:0 0 6px 1px rgba(255,255,255,.8);
+    animation:twinkle 2.2s ease-in-out infinite;
+  }
+  @keyframes twinkle{ 0%,100%{opacity:.3;} 50%{opacity:1;} }
+  .theme-ocean .deco.bubble{
+    border:2px solid rgba(255,255,255,.7);
+    border-radius:50%;
+    animation:floatUp 6s linear infinite;
+  }
+  @keyframes floatUp{
+    0%{transform:translateY(0); opacity:.8;}
+    100%{transform:translateY(-140px); opacity:0;}
+  }
+  .theme-meadow .deco.cloudlet{background:#fff; border-radius:50%; opacity:.9;}
+
+  .friend{
+    position:absolute;
+    left:50%; bottom:8%;
+    transform:translateX(-50%);
+    display:flex; flex-direction:column; align-items:center;
+    gap:2px;
+    background:none;
+    padding:0;
+    z-index:5;
+  }
+  .friend .avatar{
+    font-size:44px;
+    width:64px; height:64px;
+    display:flex; align-items:center; justify-content:center;
+    background:rgba(255,255,255,.85);
+    border-radius:50%;
+    box-shadow:0 3px 10px rgba(0,0,0,.25);
+    animation:bob 2.4s ease-in-out infinite;
+  }
+  @keyframes bob{ 0%,100%{transform:translateY(0);} 50%{transform:translateY(-6px);} }
+  .friend .name-tag{
+    font-size:11px; font-weight:bold;
+    background:#fff; color:var(--accent-dark);
+    padding:2px 8px; border-radius:999px;
+    box-shadow:0 2px 4px rgba(0,0,0,.2);
+  }
+
+  .item{
+    position:absolute;
+    width:46px; height:46px;
+    display:flex; align-items:center; justify-content:center;
+    font-size:26px;
+    background:rgba(255,255,255,.55);
+    border-radius:50%;
+    border:2px solid rgba(255,255,255,.9);
+    animation:sparkle 1.6s ease-in-out infinite;
+    z-index:4;
+    transform:translate(-50%,-50%);
+  }
+  @keyframes sparkle{
+    0%,100%{ box-shadow:0 0 0 0 rgba(255,255,255,.6); }
+    50%{ box-shadow:0 0 0 8px rgba(255,255,255,0); }
+  }
+  .item.found{
+    animation:none;
+    background:rgba(255,255,255,.15);
+    border-color:rgba(255,255,255,.3);
+    opacity:.35;
+    pointer-events:none;
+    filter:grayscale(.6);
+  }
+  .item.pop{ animation:popOut .5s ease forwards; }
+  @keyframes popOut{
+    0%{transform:translate(-50%,-50%) scale(1);}
+    50%{transform:translate(-50%,-50%) scale(1.5);}
+    100%{transform:translate(-50%,-50%) scale(1);}
+  }
+  .float-plus{
+    position:absolute;
+    font-size:16px; font-weight:bold; color:#fff;
+    text-shadow:0 1px 3px rgba(0,0,0,.4);
+    pointer-events:none;
+    animation:floatPlus 1s ease forwards;
+    z-index:6;
+  }
+  @keyframes floatPlus{
+    0%{opacity:1; transform:translate(-50%,-50%);}
+    100%{opacity:0; transform:translate(-50%,-140%);}
+  }
+
+  .speech-bubble{
+    position:absolute;
+    inset:0;
+    background:rgba(30,20,40,.55);
+    display:flex; align-items:center; justify-content:center;
+    z-index:15;
+    padding:20px;
+  }
+  .speech-bubble.hidden{display:none;}
+  .bubble-card{
+    background:#fff;
+    border-radius:18px;
+    padding:18px;
+    max-width:320px;
+    box-shadow:0 8px 24px rgba(0,0,0,.3);
+    display:flex; flex-direction:column; gap:10px; align-items:center;
+  }
+  .bubble-card .emoji{font-size:40px;}
+  .bubble-card p{font-size:15px; line-height:1.4; color:var(--ink);}
+
+  #key-panel{
+    position:absolute; left:0; right:0; bottom:0;
+    background:linear-gradient(0deg,#fff 70%,rgba(255,255,255,0));
+    padding:16px 16px 20px;
+    display:flex; flex-direction:column; align-items:center; gap:8px;
+    transform:translateY(120%);
+    transition:transform .5s cubic-bezier(.2,.9,.3,1.3);
+    z-index:12;
+  }
+  #key-panel.shown{transform:translateY(0);}
+  .key-icon{font-size:44px; animation:keySpin .8s ease;}
+  @keyframes keySpin{
+    0%{transform:rotate(-90deg) scale(0.4); opacity:0;}
+    100%{transform:rotate(0) scale(1); opacity:1;}
+  }
+
+  /* Finale */
+  #screen-finale{background:radial-gradient(circle at 50% 30%,#2a1f4d,#120a24);}
+  #screen-finale h2{color:#fbe9ff; font-size:clamp(18px,5vw,24px);}
+  #keys-display{display:flex; gap:10px; font-size:32px;}
+  #keys-display span{animation:bob 2s ease-in-out infinite;}
+  .portal-large{
+    width:190px; height:190px; border-radius:50%;
+    background:conic-gradient(from 0deg,#ff9dc7,#ffe066,#8fe3ff,#c9a2ff,#ff9dc7);
+    animation:spinPortal 2.5s linear infinite;
+    box-shadow:0 0 60px 14px rgba(255,150,220,.55);
+    position:relative;
+  }
+  .portal-large::after{
+    content:"";
+    position:absolute; inset:16px;
+    border-radius:50%;
+    background:radial-gradient(circle,#120a24 55%,transparent 100%);
+  }
+
+  /* End */
+  #screen-end{background:linear-gradient(180deg,#fff0f8,#ffe6f4);}
+  #screen-end h1{font-size:clamp(20px,6vw,28px); color:var(--accent-dark);}
+  #final-badges{display:flex; gap:10px; font-size:34px;}
+  #final-badges span{
+    background:#fff; border-radius:50%; width:56px; height:56px;
+    display:flex; align-items:center; justify-content:center;
+    box-shadow:0 3px 8px rgba(0,0,0,.15);
+    animation:badgePop .6s ease;
+  }
+
+  /* Portal transition overlay */
+  #portal-transition-overlay{
+    position:absolute; inset:0;
+    pointer-events:none;
+    z-index:50;
+    display:flex; align-items:center; justify-content:center;
+    opacity:0;
+  }
+  #portal-transition-overlay .swirl{
+    width:20px; height:20px; border-radius:50%;
+    background:conic-gradient(from 0deg,#ff9dc7,#ffe066,#8fe3ff,#c9a2ff,#ff9dc7);
+    transform:scale(0);
+  }
+  #portal-transition-overlay.spin .swirl{ animation:swirlSpin 1s linear infinite; }
+  @keyframes swirlSpin{ to{ transform:scale(60) rotate(360deg); } }
+  #portal-transition-overlay.cover{opacity:1;}
+
+  #confetti-canvas{
+    position:absolute; inset:0;
+    z-index:60;
+    pointer-events:none;
+  }
+
+  #sr-live{
+    position:absolute; width:1px; height:1px; overflow:hidden;
+    clip:rect(0 0 0 0); white-space:nowrap;
+  }
+
+  @media (max-width:360px){
+    .item{width:40px; height:40px; font-size:22px;}
+    .friend .avatar{width:54px; height:54px; font-size:36px;}
+  }
+</style>
+</head>
+<body>
+<div id="app">
+
+  <header id="hud">
+    <div id="hud-title">Lulu's Portal Adventure</div>
+    <div id="badge-tray">
+      <span class="badge-slot" data-slot="cloud">🍬</span>
+      <span class="badge-slot" data-slot="star">⭐</span>
+      <span class="badge-slot" data-slot="ocean">🐚</span>
+      <span class="badge-slot" data-slot="meadow">🌸</span>
+    </div>
+    <button id="sound-toggle" aria-label="Toggle sound" aria-pressed="false">🔊</button>
+  </header>
+
+  <main id="stage">
+
+    <section id="screen-title" class="screen active">
+      <div class="lulu-portrait">
+        <img id="luluPhoto" src="lulu-photo.jpg" alt="Lulu the piggy" referrerpolicy="no-referrer">
+        <svg id="luluFallback" viewBox="0 0 200 200" role="img" aria-label="Lulu the piggy illustration">
+          <ellipse cx="100" cy="120" rx="62" ry="52" fill="#ffc9e3"/>
+          <ellipse cx="66" cy="72" rx="18" ry="20" fill="#ffb3da"/>
+          <ellipse cx="134" cy="72" rx="18" ry="20" fill="#ffb3da"/>
+          <ellipse cx="66" cy="74" rx="8" ry="9" fill="#ff8fc4"/>
+          <ellipse cx="134" cy="74" rx="8" ry="9" fill="#ff8fc4"/>
+          <circle cx="100" cy="112" r="46" fill="#ffd6ec"/>
+          <ellipse cx="100" cy="128" rx="20" ry="14" fill="#ffa8d4"/>
+          <circle cx="93" cy="128" r="2.6" fill="#c9457e"/>
+          <circle cx="107" cy="128" r="2.6" fill="#c9457e"/>
+          <circle cx="80" cy="104" r="4.5" fill="#2c2030"/>
+          <circle cx="120" cy="104" r="4.5" fill="#2c2030"/>
+          <ellipse cx="70" cy="118" rx="8" ry="5" fill="#ff9dc7" opacity=".7"/>
+          <ellipse cx="130" cy="118" rx="8" ry="5" fill="#ff9dc7" opacity=".7"/>
+          <path d="M150 150 q22 -30 4 -46" stroke="#c9a2ff" stroke-width="5" fill="none" stroke-linecap="round"/>
+          <path d="M133 106 q21 -22 42 -6 q-6 -18 -27 -20 q-19 1 -15 26 Z" fill="#c9a2ff"/>
+          <circle cx="154" cy="104" r="4" fill="#fff"/>
+        </svg>
+      </div>
+      <h1 class="title-h1">Lulu's Portal Adventure</h1>
+      <p>Oops! Lulu the piggy bumped a mysterious button and a swirling portal appeared! Help her explore four magical worlds, make new friends, and find her way home.</p>
+      <button id="btn-start" class="big-button">Start Adventure ▶</button>
+    </section>
+
+    <section id="screen-story" class="screen">
+      <div class="story-portal" aria-hidden="true"></div>
+      <h2 id="story-heading">Whoosh!</h2>
+      <p id="story-text">The portal swirls brighter and brighter... and pulls Lulu right in!</p>
+      <button id="btn-story-next" class="big-button">Go!</button>
+    </section>
+
+    <section id="screen-universe" class="screen">
+      <div id="universe-banner">
+        <h2 id="universe-name">Universe</h2>
+        <div id="item-counter">Found: <span id="found-count">0</span>/3</div>
+      </div>
+      <div id="universe-scene" class="scene">
+        <div id="friend-character" class="friend"></div>
+        <div id="items-layer"></div>
+        <div id="key-panel">
+          <div class="key-icon">🔑</div>
+          <p id="key-panel-text">You found the key!</p>
+          <button id="btn-next-universe" class="big-button">Continue</button>
+        </div>
+      </div>
+      <div id="speech-bubble" class="speech-bubble hidden">
+        <div class="bubble-card">
+          <div class="emoji" id="bubble-emoji">🐷</div>
+          <p id="bubble-text"></p>
+          <button id="btn-bubble-close" class="big-button">Let's Explore!</button>
+        </div>
+      </div>
+    </section>
+
+    <section id="screen-finale" class="screen">
+      <h2>All 4 Keys Found!</h2>
+      <div id="keys-display"></div>
+      <p style="color:#e8d6f5;">Lulu is ready to open the portal home. Tap it when you're ready!</p>
+      <button id="btn-go-home" class="big-button" style="padding:0; width:190px; height:190px; border-radius:50%; background:none; box-shadow:none;">
+        <div class="portal-large" aria-label="Open the portal home"></div>
+      </button>
+    </section>
+
+    <section id="screen-end" class="screen">
+      <h1>Welcome Home, Lulu! 🎉</h1>
+      <p>You explored four magical worlds and made four wonderful new friends. Great job!</p>
+      <div id="final-badges"></div>
+      <button id="btn-replay" class="big-button">Play Again</button>
+    </section>
+
+  </main>
+
+  <div id="portal-transition-overlay" aria-hidden="true"><div class="swirl"></div></div>
+  <canvas id="confetti-canvas"></canvas>
+  <div id="sr-live" role="status" aria-live="polite"></div>
+</div>
+
+<script>
+(function(){
+  "use strict";
+
+  var UNIVERSES = [
+    {
+      id:"cloud",
+      name:"Bubblegum Cloud Kingdom",
+      theme:"theme-cloud",
+      friendEmoji:"🐰",
+      friendName:"Puffy",
+      greeting:"Hiya! I'm Puffy the cloud bunny! Someone scattered my three sticky candy stars all over the sky. Can you help me find them?",
+      badge:"🍬",
+      keyMessage:"You and Puffy found all the candy stars! A shiny key pops out of a cloud!",
+      items:[
+        {emoji:"⭐", top:18, left:20, label:"candy star"},
+        {emoji:"⭐", top:30, left:78, label:"candy star"},
+        {emoji:"⭐", top:62, left:12, label:"candy star"}
+      ],
+      decoCount:5
+    },
+    {
+      id:"star",
+      name:"Twinkling Star Galaxy",
+      theme:"theme-star",
+      friendEmoji:"🐱",
+      friendName:"Twinkle",
+      greeting:"Meow! I'm Twinkle the star kitten! I lost three of my glowing moon marbles among the stars. Will you help me look?",
+      badge:"⭐",
+      keyMessage:"All three moon marbles are back! A galaxy key twinkles into view!",
+      items:[
+        {emoji:"🌙", top:22, left:16, label:"moon marble"},
+        {emoji:"🌙", top:14, left:70, label:"moon marble"},
+        {emoji:"🌙", top:58, left:82, label:"moon marble"}
+      ],
+      decoCount:14
+    },
+    {
+      id:"ocean",
+      name:"Bubbling Ocean Lagoon",
+      theme:"theme-ocean",
+      friendEmoji:"🦦",
+      friendName:"Splash",
+      greeting:"Hi there! I'm Splash the otter! The waves washed away my three favorite shiny shells. Could you help me find them?",
+      badge:"🐚",
+      keyMessage:"All three shells are found! A pearly key bubbles up from the lagoon!",
+      items:[
+        {emoji:"🐚", top:24, left:22, label:"shiny shell"},
+        {emoji:"🐚", top:40, left:74, label:"shiny shell"},
+        {emoji:"🐚", top:66, left:34, label:"shiny shell"}
+      ],
+      decoCount:8
+    },
+    {
+      id:"meadow",
+      name:"Kitty Meadow",
+      theme:"theme-meadow",
+      friendEmoji:"🐈",
+      friendName:"Whiskers",
+      greeting:"Purr! I'm Whiskers! I was playing and lost three little yarn flowers in the grass. Help me find them so we can play more?",
+      badge:"🌸",
+      keyMessage:"All three yarn flowers are found! A grassy key blooms into view!",
+      items:[
+        {emoji:"🌼", top:58, left:18, label:"yarn flower"},
+        {emoji:"🌼", top:70, left:66, label:"yarn flower"},
+        {emoji:"🌼", top:50, left:82, label:"yarn flower"}
+      ],
+      decoCount:4
+    }
+  ];
+
+  var state = {
+    universeIndex:0,
+    found:{},
+    badgesEarned:[],
+    muted:false
+  };
+
+  var screens = {};
+  ["title","story","universe","finale","end"].forEach(function(name){
+    screens[name] = document.getElementById("screen-"+name);
+  });
+
+  function showScreen(name){
+    Object.keys(screens).forEach(function(key){
+      screens[key].classList.toggle("active", key === name);
+    });
+  }
+
+  function announce(text){
+    document.getElementById("sr-live").textContent = text;
+  }
+
+  /* ---------- Audio ---------- */
+  var audioCtx = null;
+  function ensureAudio(){
+    if (audioCtx) return audioCtx;
+    var Ctx = window.AudioContext || window.webkitAudioContext;
+    if (!Ctx) return null;
+    audioCtx = new Ctx();
+    return audioCtx;
+  }
+  function resumeAudio(){
+    var ctx = ensureAudio();
+    if (ctx && ctx.state === "suspended") ctx.resume();
+  }
+  function tone(freq, start, dur, type, gainPeak){
+    var ctx = ensureAudio();
+    if (!ctx || state.muted) return;
+    var osc = ctx.createOscillator();
+    var gain = ctx.createGain();
+    osc.type = type || "sine";
+    osc.frequency.setValueAtTime(freq, ctx.currentTime + start);
+    gain.gain.setValueAtTime(0, ctx.currentTime + start);
+    gain.gain.linearRampToValueAtTime(gainPeak || 0.18, ctx.currentTime + start + 0.02);
+    gain.gain.exponentialRampToValueAtTime(0.0001, ctx.currentTime + start + dur);
+    osc.connect(gain).connect(ctx.destination);
+    osc.start(ctx.currentTime + start);
+    osc.stop(ctx.currentTime + start + dur + 0.05);
+  }
+  function playPop(){ tone(660,0,0.12,"triangle",0.2); tone(880,0.06,0.12,"triangle",0.15); }
+  function playKeyJingle(){
+    [523.25,659.25,783.99,1046.5].forEach(function(f,i){ tone(f, i*0.11, 0.25, "sine", 0.2); });
+  }
+  function playPortalWhoosh(){
+    var ctx = ensureAudio();
+    if (!ctx || state.muted) return;
+    var osc = ctx.createOscillator();
+    var gain = ctx.createGain();
+    osc.type = "sawtooth";
+    osc.frequency.setValueAtTime(120, ctx.currentTime);
+    osc.frequency.exponentialRampToValueAtTime(900, ctx.currentTime + 0.6);
+    gain.gain.setValueAtTime(0.0001, ctx.currentTime);
+    gain.gain.linearRampToValueAtTime(0.12, ctx.currentTime + 0.1);
+    gain.gain.exponentialRampToValueAtTime(0.0001, ctx.currentTime + 0.7);
+    osc.connect(gain).connect(ctx.destination);
+    osc.start();
+    osc.stop(ctx.currentTime + 0.75);
+  }
+  function playGiggle(){ tone(440,0,0.08,"square",0.12); tone(520,0.09,0.08,"square",0.12); tone(600,0.18,0.1,"square",0.12); }
+  function playFanfare(){
+    [523.25,659.25,783.99,1046.5,1318.5].forEach(function(f,i){ tone(f, i*0.14, 0.35, "triangle", 0.22); });
+  }
+  function playClick(){ tone(300,0,0.06,"sine",0.1); }
+
+  /* ---------- Confetti ---------- */
+  var canvas = document.getElementById("confetti-canvas");
+  var ctx2d = canvas.getContext("2d");
+  var confettiParticles = [];
+  var confettiRunning = false;
+  var COLORS = ["#ff9dc7","#ffe066","#8fe3ff","#c9a2ff","#8fd66b","#ff7fb0"];
+
+  function resizeCanvas(){
+    var app = document.getElementById("app");
+    canvas.width = app.clientWidth;
+    canvas.height = app.clientHeight;
+  }
+  window.addEventListener("resize", resizeCanvas);
+
+  function burstConfetti(x, y, count){
+    resizeCanvas();
+    for (var i=0;i<count;i++){
+      confettiParticles.push({
+        x:x, y:y,
+        vx:(Math.random()-0.5)*6,
+        vy:-(Math.random()*6+3),
+        size:4+Math.random()*4,
+        color:COLORS[Math.floor(Math.random()*COLORS.length)],
+        rot:Math.random()*360,
+        vr:(Math.random()-0.5)*12,
+        life:0,
+        maxLife:60+Math.random()*30
+      });
+    }
+    if (!confettiRunning) runConfetti();
+  }
+
+  function showerConfetti(count){
+    resizeCanvas();
+    for (var i=0;i<count;i++){
+      confettiParticles.push({
+        x:Math.random()*canvas.width,
+        y:-20-Math.random()*100,
+        vx:(Math.random()-0.5)*2,
+        vy:Math.random()*2+2,
+        size:5+Math.random()*5,
+        color:COLORS[Math.floor(Math.random()*COLORS.length)],
+        rot:Math.random()*360,
+        vr:(Math.random()-0.5)*10,
+        life:0,
+        maxLife:160+Math.random()*60
+      });
+    }
+    if (!confettiRunning) runConfetti();
+  }
+
+  function runConfetti(){
+    confettiRunning = true;
+    ctx2d.clearRect(0,0,canvas.width,canvas.height);
+    for (var i=confettiParticles.length-1;i>=0;i--){
+      var p = confettiParticles[i];
+      p.x += p.vx; p.y += p.vy; p.vy += 0.12; p.rot += p.vr; p.life++;
+      ctx2d.save();
+      ctx2d.translate(p.x,p.y);
+      ctx2d.rotate(p.rot*Math.PI/180);
+      ctx2d.fillStyle = p.color;
+      ctx2d.fillRect(-p.size/2,-p.size/2,p.size,p.size*0.6);
+      ctx2d.restore();
+      if (p.life > p.maxLife || p.y > canvas.height+30){
+        confettiParticles.splice(i,1);
+      }
+    }
+    if (confettiParticles.length > 0){
+      requestAnimationFrame(runConfetti);
+    } else {
+      confettiRunning = false;
+      ctx2d.clearRect(0,0,canvas.width,canvas.height);
+    }
+  }
+
+  /* ---------- Portal transition ---------- */
+  var overlay = document.getElementById("portal-transition-overlay");
+  function portalTransition(midCallback){
+    playPortalWhoosh();
+    overlay.classList.add("cover","spin");
+    setTimeout(function(){
+      if (midCallback) midCallback();
+    }, 480);
+    setTimeout(function(){
+      overlay.classList.remove("cover","spin");
+    }, 900);
+  }
+
+  /* ---------- Decorations ---------- */
+  function renderDeco(scene, universe){
+    var frag = document.createDocumentFragment();
+    var w = scene.clientWidth || 300;
+    var h = scene.clientHeight || 300;
+    for (var i=0;i<universe.decoCount;i++){
+      var d = document.createElement("div");
+      d.className = "deco " + (universe.id === "cloud" ? "puff" : universe.id === "star" ? "star-dot" : universe.id === "ocean" ? "bubble" : "cloudlet");
+      var size, top, left;
+      if (universe.id === "cloud"){
+        size = 30 + Math.random()*40;
+        top = Math.random()*60;
+        left = Math.random()*90;
+      } else if (universe.id === "star"){
+        size = 2 + Math.random()*3;
+        top = Math.random()*80;
+        left = Math.random()*95;
+        d.style.animationDelay = (Math.random()*2)+"s";
+      } else if (universe.id === "ocean"){
+        size = 8 + Math.random()*16;
+        top = 60 + Math.random()*35;
+        left = Math.random()*90;
+        d.style.animationDelay = (Math.random()*4)+"s";
+      } else {
+        size = 24 + Math.random()*30;
+        top = Math.random()*22;
+        left = Math.random()*90;
+      }
+      d.style.width = size+"px";
+      d.style.height = size+"px";
+      d.style.top = top+"%";
+      d.style.left = left+"%";
+      frag.appendChild(d);
+    }
+    scene.insertBefore(frag, scene.firstChild);
+  }
+
+  /* ---------- Universe rendering ---------- */
+  var scene = document.getElementById("universe-scene");
+  var itemsLayer = document.getElementById("items-layer");
+  var friendEl = document.getElementById("friend-character");
+  var keyPanel = document.getElementById("key-panel");
+  var speechBubble = document.getElementById("speech-bubble");
+
+  function renderUniverse(index){
+    var universe = UNIVERSES[index];
+    state.found[universe.id] = 0;
+
+    scene.className = "scene " + universe.theme;
+    document.querySelectorAll(".deco").forEach(function(el){ el.remove(); });
+    itemsLayer.innerHTML = "";
+    keyPanel.classList.remove("shown");
+
+    document.getElementById("universe-name").textContent = universe.name;
+    document.getElementById("found-count").textContent = "0";
+
+    friendEl.innerHTML =
+      '<div class="avatar">' + universe.friendEmoji + '</div>' +
+      '<div class="name-tag">' + universe.friendName + '</div>';
+    friendEl.setAttribute("role","button");
+    friendEl.setAttribute("tabindex","0");
+    friendEl.setAttribute("aria-label", "Talk to " + universe.friendName);
+
+    renderDeco(scene, universe);
+
+    universe.items.forEach(function(item, i){
+      var el = document.createElement("button");
+      el.className = "item";
+      el.type = "button";
+      el.textContent = item.emoji;
+      el.style.top = item.top + "%";
+      el.style.left = item.left + "%";
+      el.style.animationDelay = (i*0.2) + "s";
+      el.setAttribute("aria-label", "Find the " + item.label);
+      el.dataset.index = i;
+      el.addEventListener("click", function(){ onItemClick(el, universe); });
+      itemsLayer.appendChild(el);
+    });
+
+    document.getElementById("bubble-emoji").textContent = universe.friendEmoji;
+    document.getElementById("bubble-text").textContent = universe.greeting;
+    speechBubble.classList.remove("hidden");
+  }
+
+  function onItemClick(el, universe){
+    if (el.classList.contains("found")) return;
+    el.classList.add("found","pop");
+    playPop();
+    var rect = el.getBoundingClientRect();
+    var appRect = document.getElementById("app").getBoundingClientRect();
+    burstConfetti(rect.left - appRect.left + rect.width/2, rect.top - appRect.top + rect.height/2, 14);
+
+    var plus = document.createElement("div");
+    plus.className = "float-plus";
+    plus.textContent = "+1";
+    plus.style.left = el.style.left;
+    plus.style.top = el.style.top;
+    scene.appendChild(plus);
+    setTimeout(function(){ plus.remove(); }, 1000);
+
+    state.found[universe.id]++;
+    document.getElementById("found-count").textContent = state.found[universe.id];
+    announce(universe.friendName + " says thanks! " + state.found[universe.id] + " of 3 found.");
+
+    if (state.found[universe.id] >= universe.items.length){
+      setTimeout(function(){ revealKey(universe); }, 500);
+    }
+  }
+
+  function revealKey(universe){
+    playKeyJingle();
+    if (state.badgesEarned.indexOf(universe.id) === -1){
+      state.badgesEarned.push(universe.id);
+    }
+    var slot = document.querySelector('.badge-slot[data-slot="'+universe.id+'"]');
+    if (slot) slot.classList.add("earned");
+
+    document.getElementById("key-panel-text").textContent = universe.keyMessage;
+    var isLast = state.universeIndex === UNIVERSES.length - 1;
+    document.getElementById("btn-next-universe").textContent = isLast ? "Open Final Portal" : "Continue";
+    keyPanel.classList.add("shown");
+    announce(universe.keyMessage);
+  }
+
+  document.getElementById("btn-bubble-close").addEventListener("click", function(){
+    resumeAudio();
+    playGiggle();
+    speechBubble.classList.add("hidden");
+  });
+
+  friendEl && friendEl.addEventListener && null;
+  document.getElementById("universe-scene").addEventListener("click", function(e){
+    if (e.target.closest && e.target.closest("#friend-character")){
+      resumeAudio();
+      playGiggle();
+    }
+  });
+
+  document.getElementById("btn-next-universe").addEventListener("click", function(){
+    resumeAudio();
+    playClick();
+    var isLast = state.universeIndex === UNIVERSES.length - 1;
+    portalTransition(function(){
+      if (isLast){
+        showFinale();
+      } else {
+        state.universeIndex++;
+        renderUniverse(state.universeIndex);
+      }
+    });
+    if (isLast){
+      showScreen("universe");
+    }
+  });
+
+  /* ---------- Finale / End ---------- */
+  function showFinale(){
+    var display = document.getElementById("keys-display");
+    display.innerHTML = "";
+    UNIVERSES.forEach(function(u){
+      var span = document.createElement("span");
+      span.textContent = "🔑";
+      span.setAttribute("aria-label", u.name + " key");
+      display.appendChild(span);
+    });
+    showScreen("finale");
+  }
+
+  document.getElementById("btn-go-home").addEventListener("click", function(){
+    resumeAudio();
+    playPortalWhoosh();
+    portalTransition(function(){
+      showEnd();
+    });
+  });
+
+  function showEnd(){
+    playFanfare();
+    var badges = document.getElementById("final-badges");
+    badges.innerHTML = "";
+    UNIVERSES.forEach(function(u){
+      var span = document.createElement("span");
+      span.textContent = u.badge;
+      span.setAttribute("aria-label", u.name + " badge");
+      badges.appendChild(span);
+    });
+    showScreen("end");
+    resizeCanvas();
+    showerConfetti(120);
+    announce("Welcome home, Lulu! All four badges earned.");
+  }
+
+  document.getElementById("btn-replay").addEventListener("click", function(){
+    resumeAudio();
+    playClick();
+    state.universeIndex = 0;
+    state.found = {};
+    state.badgesEarned = [];
+    document.querySelectorAll(".badge-slot").forEach(function(el){ el.classList.remove("earned"); });
+    showScreen("title");
+  });
+
+  /* ---------- Title / Story ---------- */
+  var luluPhoto = document.getElementById("luluPhoto");
+  var luluFallback = document.getElementById("luluFallback");
+  luluFallback.style.display = "none";
+  luluPhoto.addEventListener("error", function(){
+    luluPhoto.style.display = "none";
+    luluFallback.style.display = "block";
+  });
+
+  document.getElementById("btn-start").addEventListener("click", function(){
+    resumeAudio();
+    playClick();
+    showScreen("story");
+  });
+
+  document.getElementById("btn-story-next").addEventListener("click", function(){
+    resumeAudio();
+    portalTransition(function(){
+      state.universeIndex = 0;
+      showScreen("universe");
+      renderUniverse(0);
+    });
+  });
+
+  document.getElementById("sound-toggle").addEventListener("click", function(){
+    state.muted = !state.muted;
+    var btn = document.getElementById("sound-toggle");
+    btn.textContent = state.muted ? "🔇" : "🔊";
+    btn.setAttribute("aria-pressed", String(state.muted));
+    if (!state.muted) resumeAudio();
+  });
+
+  window.addEventListener("resize", function(){
+    resizeCanvas();
+  });
+  resizeCanvas();
+
+})();
+</script>
+</body>
+</html>
