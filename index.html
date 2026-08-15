@@ -1,0 +1,828 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>My Super Healthy Week</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@500;600;700&family=Nunito:wght@500;700;800&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #FFFBF0;
+    --ink: #2B2B2B;
+    --white: #FFFFFF;
+    --shadow: rgba(0, 0, 0, 0.12);
+
+    --breakfast: #FFB84C;
+    --lunch: #5FD068;
+    --snack: #C77DFF;
+    --dinner: #4DA8DA;
+
+    --cat-grains: #F4A300;
+    --cat-proteins: #FF6B6B;
+    --cat-fruits: #FF6F91;
+    --cat-veg: #4CAF50;
+    --cat-dairy: #64B5F6;
+    --cat-fats: #9575CD;
+    --cat-snacks: #26C6DA;
+  }
+
+  * , *::before, *::after {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+  }
+
+  html {
+    -webkit-font-smoothing: antialiased;
+    scroll-behavior: smooth;
+  }
+
+  body {
+    background: var(--bg);
+    color: var(--ink);
+    font-family: 'Nunito', sans-serif;
+    padding-bottom: 6rem;
+  }
+
+  h1, h2, h3, button {
+    font-family: 'Fredoka', sans-serif;
+  }
+
+  /* ---------- Header ---------- */
+
+  header.hero {
+    text-align: center;
+    padding: 2rem 1rem 1.25rem;
+  }
+
+  header.hero h1 {
+    font-size: clamp(1.75rem, 5vw, 2.5rem);
+    font-weight: 700;
+    margin-bottom: 0.5rem;
+  }
+
+  header.hero p {
+    font-size: 1.1rem;
+    font-weight: 700;
+    color: #6b6b6b;
+  }
+
+  /* ---------- Sticky active-slot bar ---------- */
+
+  #active-slot-bar {
+    position: sticky;
+    top: 0;
+    z-index: 20;
+    background: var(--white);
+    border-bottom: 3px solid #FFE1A8;
+    box-shadow: 0 4px 14px var(--shadow);
+    padding: 0.85rem 1rem;
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: center;
+    gap: 0.75rem;
+  }
+
+  #active-slot-label {
+    font-family: 'Fredoka', sans-serif;
+    font-weight: 600;
+    font-size: 1.05rem;
+    background: #FFF3D6;
+    border-radius: 999px;
+    padding: 0.5rem 1.1rem;
+    white-space: nowrap;
+  }
+
+  #active-slot-label.is-empty {
+    background: #F0F0F0;
+    color: #888;
+  }
+
+  #custom-food-form {
+    display: flex;
+    gap: 0.5rem;
+  }
+
+  #custom-food-input {
+    font-family: 'Nunito', sans-serif;
+    font-size: 1rem;
+    font-weight: 700;
+    padding: 0.6rem 1rem;
+    border: 2px solid #FFD37A;
+    border-radius: 999px;
+    min-height: 44px;
+    min-width: 180px;
+    background: var(--white);
+  }
+
+  #custom-food-input:disabled {
+    background: #F2F2F2;
+    border-color: #DDD;
+    color: #999;
+    cursor: not-allowed;
+  }
+
+  #custom-food-input:focus {
+    outline: 3px solid var(--breakfast);
+  }
+
+  .btn {
+    font-family: 'Fredoka', sans-serif;
+    font-weight: 600;
+    font-size: 1rem;
+    border: none;
+    border-radius: 999px;
+    min-height: 44px;
+    padding: 0.6rem 1.3rem;
+    cursor: pointer;
+    box-shadow: 0 3px 0 rgba(0, 0, 0, 0.15);
+    transition: transform 0.1s ease;
+  }
+
+  .btn:active {
+    transform: translateY(2px) scale(0.98);
+    box-shadow: 0 1px 0 rgba(0, 0, 0, 0.15);
+  }
+
+  .btn:disabled {
+    background: #DDD !important;
+    color: #999 !important;
+    cursor: not-allowed;
+    box-shadow: none;
+  }
+
+  .btn-add {
+    background: var(--lunch);
+    color: var(--white);
+  }
+
+  /* ---------- Layout ---------- */
+
+  main.layout {
+    max-width: 900px;
+    margin: 0 auto;
+    padding: 1.5rem 1rem;
+    display: flex;
+    flex-direction: column;
+    gap: 2rem;
+  }
+
+  /* ---------- Food picker ---------- */
+
+  #picker h2, #week-grid h2 {
+    font-size: 1.4rem;
+    margin-bottom: 0.75rem;
+    text-align: center;
+  }
+
+  .category {
+    background: var(--white);
+    border-radius: 20px;
+    box-shadow: 0 4px 10px var(--shadow);
+    margin-bottom: 0.75rem;
+    overflow: hidden;
+  }
+
+  .category-header {
+    width: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.5rem;
+    background: none;
+    border: none;
+    padding: 1rem 1.25rem;
+    font-size: 1.1rem;
+    font-weight: 600;
+    cursor: pointer;
+    min-height: 44px;
+    color: var(--white);
+  }
+
+  .category-header .chevron {
+    transition: transform 0.2s ease;
+    font-size: 0.9rem;
+  }
+
+  .category[data-open="true"] .chevron {
+    transform: rotate(180deg);
+  }
+
+  .category-body {
+    display: none;
+    padding: 1rem;
+    gap: 0.6rem;
+    flex-wrap: wrap;
+  }
+
+  .category[data-open="true"] .category-body {
+    display: flex;
+  }
+
+  .food-btn {
+    background: #FFF9EC;
+    border: 2px solid #F1E6C8;
+    border-radius: 16px;
+    padding: 0.6rem 0.9rem;
+    font-family: 'Nunito', sans-serif;
+    font-weight: 800;
+    font-size: 0.95rem;
+    min-height: 44px;
+    cursor: pointer;
+    transition: transform 0.1s ease, background 0.15s ease;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.4rem;
+  }
+
+  .food-btn:hover, .food-btn:focus-visible {
+    background: #FFEFC8;
+  }
+
+  .food-btn:active {
+    transform: scale(0.94);
+  }
+
+  /* ---------- Weekly grid ---------- */
+
+  .day-block {
+    background: var(--white);
+    border-radius: 24px;
+    box-shadow: 0 4px 12px var(--shadow);
+    padding: 1.1rem;
+    margin-bottom: 1.1rem;
+  }
+
+  .day-block h3 {
+    font-size: 1.3rem;
+    margin-bottom: 0.75rem;
+    text-align: center;
+  }
+
+  .meals-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(190px, 1fr));
+    gap: 0.75rem;
+  }
+
+  .slot {
+    border-radius: 18px;
+    padding: 0.85rem;
+    min-height: 96px;
+    cursor: pointer;
+    border: 3px solid transparent;
+    transition: transform 0.1s ease, border-color 0.15s ease;
+    background: #FAFAFA;
+  }
+
+  .slot:active {
+    transform: scale(0.98);
+  }
+
+  .slot.is-active {
+    border-color: #2B2B2B;
+    box-shadow: 0 0 0 4px rgba(0, 0, 0, 0.08);
+  }
+
+  .slot .slot-label {
+    font-family: 'Fredoka', sans-serif;
+    font-weight: 600;
+    font-size: 0.95rem;
+    display: block;
+    margin-bottom: 0.5rem;
+  }
+
+  .slot[data-meal="Breakfast"] { background: color-mix(in srgb, var(--breakfast) 18%, white); }
+  .slot[data-meal="Lunch"]     { background: color-mix(in srgb, var(--lunch) 18%, white); }
+  .slot[data-meal="Snack"]     { background: color-mix(in srgb, var(--snack) 18%, white); }
+  .slot[data-meal="Dinner"]    { background: color-mix(in srgb, var(--dinner) 18%, white); }
+
+  .chip-list {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.35rem;
+  }
+
+  .chip {
+    background: var(--white);
+    border-radius: 999px;
+    padding: 0.3rem 0.4rem 0.3rem 0.7rem;
+    font-size: 0.85rem;
+    font-weight: 700;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.35rem;
+    box-shadow: 0 2px 4px var(--shadow);
+  }
+
+  .chip button.remove {
+    background: #F0F0F0;
+    border: none;
+    border-radius: 50%;
+    width: 22px;
+    height: 22px;
+    min-height: unset;
+    line-height: 1;
+    cursor: pointer;
+    font-size: 0.8rem;
+    font-weight: 700;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0;
+  }
+
+  .slot-empty {
+    font-size: 0.85rem;
+    color: #888;
+    font-weight: 700;
+  }
+
+  /* ---------- Footer controls ---------- */
+
+  footer#controls {
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    display: flex;
+    justify-content: center;
+    gap: 0.75rem;
+    padding: 0.85rem;
+    background: var(--white);
+    box-shadow: 0 -4px 14px var(--shadow);
+    z-index: 20;
+  }
+
+  .btn-print {
+    background: var(--dinner);
+    color: var(--white);
+  }
+
+  .btn-clear {
+    background: #FF6B6B;
+    color: var(--white);
+  }
+
+  /* ---------- Toast ---------- */
+
+  #toast {
+    position: fixed;
+    bottom: 5.5rem;
+    left: 50%;
+    transform: translateX(-50%) translateY(20px);
+    background: var(--ink);
+    color: var(--white);
+    font-family: 'Fredoka', sans-serif;
+    font-weight: 600;
+    padding: 0.75rem 1.25rem;
+    border-radius: 999px;
+    box-shadow: 0 4px 14px var(--shadow);
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.2s ease, transform 0.2s ease;
+    z-index: 30;
+    white-space: nowrap;
+  }
+
+  #toast.show {
+    opacity: 1;
+    transform: translateX(-50%) translateY(0);
+  }
+
+  @keyframes shake {
+    10%, 90% { transform: translateX(-2px); }
+    20%, 80% { transform: translateX(3px); }
+    30%, 50%, 70% { transform: translateX(-5px); }
+    40%, 60% { transform: translateX(5px); }
+  }
+
+  #week-grid.shake {
+    animation: shake 0.4s;
+  }
+
+  /* ---------- Print ---------- */
+
+  @media print {
+    @page {
+      size: landscape;
+      margin: 1cm;
+    }
+
+    #active-slot-bar, #picker, footer#controls, #toast, header.hero p,
+    .chip button.remove {
+      display: none !important;
+    }
+
+    body {
+      background: white;
+      padding-bottom: 0;
+    }
+
+    .day-block {
+      box-shadow: none;
+      border: 1px solid #999;
+      page-break-inside: avoid;
+      margin-bottom: 0.5rem;
+      border-radius: 6px;
+    }
+
+    .slot {
+      background: white !important;
+      border: 1px solid #ccc;
+    }
+
+    .chip {
+      box-shadow: none;
+      border: 1px solid #ccc;
+      background: white;
+    }
+
+    .slot.is-active {
+      border: 1px solid #ccc;
+      box-shadow: none;
+    }
+  }
+</style>
+</head>
+<body>
+
+<header class="hero">
+  <h1>🥗 My Super Healthy Week 🌟</h1>
+  <p>Tap a meal box, then tap foods below to add them!</p>
+</header>
+
+<div id="active-slot-bar">
+  <span id="active-slot-label" class="is-empty">Tap a meal box to start!</span>
+  <form id="custom-food-form" autocomplete="off">
+    <input id="custom-food-input" type="text" placeholder="Add your own food..." maxlength="40" disabled>
+    <button type="submit" class="btn btn-add" id="custom-food-submit" disabled>Add ➕</button>
+  </form>
+</div>
+
+<main class="layout">
+  <section id="picker" aria-label="Food picker">
+    <h2>Pick some yummy foods 👇</h2>
+    <div id="categories"></div>
+  </section>
+
+  <section id="week-grid" aria-label="Weekly plan">
+    <h2>Your Weekly Plan 📅</h2>
+    <div id="days"></div>
+  </section>
+</main>
+
+<footer id="controls">
+  <button class="btn btn-print" id="print-btn">🖨️ Print my plan</button>
+  <button class="btn btn-clear" id="clear-btn">🗑️ Clear week</button>
+</footer>
+
+<div id="toast"></div>
+
+<script>
+(function () {
+  'use strict';
+
+  var STORAGE_KEY = 'kidMealPlanner:v1';
+  var DAYS = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'];
+  var MEALS = ['Breakfast', 'Lunch', 'Snack', 'Dinner'];
+
+  var CATEGORIES = [
+    {
+      name: 'Grains & Starches',
+      emoji: '🌾',
+      color: 'var(--cat-grains)',
+      items: [
+        { label: 'Oatmeal', emoji: '🥣' },
+        { label: 'Whole Grain Cereal', emoji: '🥣' },
+        { label: 'Brown Rice', emoji: '🍚' },
+        { label: 'Whole Wheat Bread', emoji: '🍞' },
+        { label: 'Whole Wheat Pasta', emoji: '🍝' },
+        { label: 'Quinoa', emoji: '🌰' },
+        { label: 'Barley Soup', emoji: '🍲' },
+        { label: 'Whole Grain Tortilla', emoji: '🌯' },
+        { label: 'Sweet Potato', emoji: '🍠' }
+      ]
+    },
+    {
+      name: 'Proteins',
+      emoji: '🍗',
+      color: 'var(--cat-proteins)',
+      items: [
+        { label: 'Chicken Breast', emoji: '🍗' },
+        { label: 'Turkey', emoji: '🦃' },
+        { label: 'Salmon', emoji: '🐟' },
+        { label: 'Tuna', emoji: '🐟' },
+        { label: 'White Fish', emoji: '🐠' },
+        { label: 'Lean Pork Tenderloin', emoji: '🐖' },
+        { label: 'Eggs', emoji: '🥚' },
+        { label: 'Black Beans', emoji: '🫘' },
+        { label: 'Kidney Beans', emoji: '🫘' },
+        { label: 'Chickpeas', emoji: '🧆' },
+        { label: 'Lentils', emoji: '🍛' },
+        { label: 'Tofu', emoji: '🧊' },
+        { label: 'Edamame', emoji: '🫛' }
+      ]
+    },
+    {
+      name: 'Fruits',
+      emoji: '🍎',
+      color: 'var(--cat-fruits)',
+      items: [
+        { label: 'Apple', emoji: '🍎' },
+        { label: 'Banana', emoji: '🍌' },
+        { label: 'Orange', emoji: '🍊' },
+        { label: 'Strawberries', emoji: '🍓' },
+        { label: 'Blueberries', emoji: '🫐' },
+        { label: 'Grapes', emoji: '🍇' },
+        { label: 'Pear', emoji: '🍐' },
+        { label: 'Kiwi', emoji: '🥝' },
+        { label: 'Mango', emoji: '🥭' },
+        { label: 'Watermelon', emoji: '🍉' }
+      ]
+    },
+    {
+      name: 'Vegetables',
+      emoji: '🥦',
+      color: 'var(--cat-veg)',
+      items: [
+        { label: 'Broccoli', emoji: '🥦' },
+        { label: 'Carrots', emoji: '🥕' },
+        { label: 'Spinach', emoji: '🥬' },
+        { label: 'Bell Peppers', emoji: '🫑' },
+        { label: 'Green Beans', emoji: '🫛' },
+        { label: 'Cucumber', emoji: '🥒' },
+        { label: 'Tomato', emoji: '🍅' },
+        { label: 'Sweet Corn', emoji: '🌽' },
+        { label: 'Peas', emoji: '🟢' },
+        { label: 'Zucchini', emoji: '🥒' }
+      ]
+    },
+    {
+      name: 'Dairy & Alternatives',
+      emoji: '🥛',
+      color: 'var(--cat-dairy)',
+      items: [
+        { label: 'Low-Fat Milk', emoji: '🥛' },
+        { label: 'Low-Fat Yogurt', emoji: '🍦' },
+        { label: 'Low-Fat Cheese', emoji: '🧀' },
+        { label: 'Fortified Soy Milk', emoji: '🥛' },
+        { label: 'Low-Fat Cottage Cheese', emoji: '🧈' }
+      ]
+    },
+    {
+      name: 'Healthy Fats',
+      emoji: '🥑',
+      color: 'var(--cat-fats)',
+      items: [
+        { label: 'Avocado', emoji: '🥑' },
+        { label: 'Almonds', emoji: '🌰' },
+        { label: 'Walnuts', emoji: '🌰' },
+        { label: 'Natural Peanut Butter', emoji: '🥜' },
+        { label: 'Chia Seeds', emoji: '✨' },
+        { label: 'Ground Flaxseed', emoji: '✨' },
+        { label: 'Olive Oil Drizzle', emoji: '🫒' }
+      ]
+    },
+    {
+      name: 'Snacks & Extras',
+      emoji: '🍿',
+      color: 'var(--cat-snacks)',
+      items: [
+        { label: 'Air-Popped Popcorn', emoji: '🍿' },
+        { label: 'Hummus & Veggies', emoji: '🥕' },
+        { label: 'Rice Cakes', emoji: '🍘' },
+        { label: 'Whole Grain Crackers', emoji: '🍘' },
+        { label: 'Trail Mix', emoji: '🥜' },
+        { label: 'Unsweetened Applesauce', emoji: '🍏' },
+        { label: 'Frozen Fruit Pops', emoji: '🧊' },
+        { label: 'Small Dark Chocolate Square', emoji: '🍫' }
+      ]
+    }
+  ];
+
+  var MEAL_EMOJI = { Breakfast: '🌅', Lunch: '🥗', Snack: '🍎', Dinner: '🌙' };
+
+  var state = loadState();
+  var activeSlot = null; // { day, meal }
+
+  function freshState() {
+    var days = {};
+    DAYS.forEach(function (day) {
+      var meals = {};
+      MEALS.forEach(function (meal) { meals[meal] = []; });
+      days[day] = meals;
+    });
+    return { version: 1, days: days };
+  }
+
+  function loadState() {
+    try {
+      var raw = localStorage.getItem(STORAGE_KEY);
+      if (!raw) return freshState();
+      var parsed = JSON.parse(raw);
+      if (!parsed || parsed.version !== 1 || !parsed.days) return freshState();
+      DAYS.forEach(function (day) {
+        if (!parsed.days[day]) parsed.days[day] = {};
+        MEALS.forEach(function (meal) {
+          if (!Array.isArray(parsed.days[day][meal])) parsed.days[day][meal] = [];
+        });
+      });
+      return parsed;
+    } catch (e) {
+      return freshState();
+    }
+  }
+
+  function saveState() {
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+  }
+
+  function uid() {
+    if (window.crypto && crypto.randomUUID) return crypto.randomUUID();
+    return 'id-' + Date.now() + '-' + Math.random().toString(16).slice(2);
+  }
+
+  function escapeHtml(str) {
+    var div = document.createElement('div');
+    div.textContent = str;
+    return div.innerHTML;
+  }
+
+  // ---------- Rendering ----------
+
+  function renderCategories() {
+    var container = document.getElementById('categories');
+    container.innerHTML = CATEGORIES.map(function (cat, ci) {
+      var itemsHtml = cat.items.map(function (item, ii) {
+        return '<button type="button" class="food-btn" data-cat="' + ci + '" data-item="' + ii + '">' +
+          '<span>' + item.emoji + '</span><span>' + escapeHtml(item.label) + '</span></button>';
+      }).join('');
+      return '<div class="category" data-open="false" data-cat="' + ci + '">' +
+        '<button type="button" class="category-header" style="background:' + cat.color + '">' +
+          '<span>' + cat.emoji + ' ' + escapeHtml(cat.name) + '</span>' +
+          '<span class="chevron">▼</span>' +
+        '</button>' +
+        '<div class="category-body">' + itemsHtml + '</div>' +
+      '</div>';
+    }).join('');
+  }
+
+  function renderDays() {
+    var container = document.getElementById('days');
+    container.innerHTML = DAYS.map(function (day) {
+      var mealsHtml = MEALS.map(function (meal) {
+        var items = state.days[day][meal];
+        var isActive = activeSlot && activeSlot.day === day && activeSlot.meal === meal;
+        var chipsHtml = items.length
+          ? '<div class="chip-list">' + items.map(function (item) {
+              return '<span class="chip">' + item.emoji + ' ' + escapeHtml(item.label) +
+                '<button type="button" class="remove" data-day="' + day + '" data-meal="' + meal + '" data-id="' + item.id + '" aria-label="Remove">×</button></span>';
+            }).join('') + '</div>'
+          : '<span class="slot-empty">Tap here, then pick a food!</span>';
+        return '<div class="slot' + (isActive ? ' is-active' : '') + '" data-day="' + day + '" data-meal="' + meal + '">' +
+          '<span class="slot-label">' + MEAL_EMOJI[meal] + ' ' + meal + '</span>' +
+          chipsHtml +
+        '</div>';
+      }).join('');
+      return '<div class="day-block">' +
+        '<h3>' + day + '</h3>' +
+        '<div class="meals-grid">' + mealsHtml + '</div>' +
+      '</div>';
+    }).join('');
+  }
+
+  function renderActiveSlotBar() {
+    var label = document.getElementById('active-slot-label');
+    var input = document.getElementById('custom-food-input');
+    var submit = document.getElementById('custom-food-submit');
+    if (activeSlot) {
+      label.textContent = 'Adding to: ' + activeSlot.day + ' · ' + activeSlot.meal;
+      label.classList.remove('is-empty');
+      input.disabled = false;
+      submit.disabled = false;
+    } else {
+      label.textContent = 'Tap a meal box to start!';
+      label.classList.add('is-empty');
+      input.disabled = true;
+      submit.disabled = true;
+    }
+  }
+
+  function renderAll() {
+    renderDays();
+    renderActiveSlotBar();
+  }
+
+  // ---------- Toast ----------
+
+  var toastTimer = null;
+  function showToast(msg) {
+    var toast = document.getElementById('toast');
+    toast.textContent = msg;
+    toast.classList.add('show');
+    clearTimeout(toastTimer);
+    toastTimer = setTimeout(function () { toast.classList.remove('show'); }, 2200);
+
+    var grid = document.getElementById('week-grid');
+    grid.classList.remove('shake');
+    void grid.offsetWidth;
+    grid.classList.add('shake');
+  }
+
+  // ---------- Actions ----------
+
+  function addItemToActiveSlot(label, emoji) {
+    if (!activeSlot) {
+      showToast('Tap a meal box first! 👆');
+      return;
+    }
+    state.days[activeSlot.day][activeSlot.meal].push({ id: uid(), label: label, emoji: emoji });
+    saveState();
+    renderDays();
+  }
+
+  function removeItem(day, meal, id) {
+    state.days[day][meal] = state.days[day][meal].filter(function (item) { return item.id !== id; });
+    saveState();
+    renderDays();
+  }
+
+  function setActiveSlot(day, meal) {
+    activeSlot = { day: day, meal: meal };
+    renderDays();
+    renderActiveSlotBar();
+    document.getElementById('custom-food-input').focus();
+  }
+
+  function clearWeek() {
+    if (!confirm('Clear the whole week and start fresh?')) return;
+    state = freshState();
+    saveState();
+    activeSlot = null;
+    renderAll();
+  }
+
+  // ---------- Event wiring ----------
+
+  document.getElementById('categories').addEventListener('click', function (e) {
+    var header = e.target.closest('.category-header');
+    if (header) {
+      var cat = header.closest('.category');
+      var isOpen = cat.getAttribute('data-open') === 'true';
+      cat.setAttribute('data-open', isOpen ? 'false' : 'true');
+      return;
+    }
+    var foodBtn = e.target.closest('.food-btn');
+    if (foodBtn) {
+      var ci = Number(foodBtn.getAttribute('data-cat'));
+      var ii = Number(foodBtn.getAttribute('data-item'));
+      var item = CATEGORIES[ci].items[ii];
+      addItemToActiveSlot(item.label, item.emoji);
+    }
+  });
+
+  document.getElementById('days').addEventListener('click', function (e) {
+    var removeBtn = e.target.closest('button.remove');
+    if (removeBtn) {
+      removeItem(removeBtn.getAttribute('data-day'), removeBtn.getAttribute('data-meal'), removeBtn.getAttribute('data-id'));
+      return;
+    }
+    var slot = e.target.closest('.slot');
+    if (slot) {
+      setActiveSlot(slot.getAttribute('data-day'), slot.getAttribute('data-meal'));
+    }
+  });
+
+  document.getElementById('custom-food-form').addEventListener('submit', function (e) {
+    e.preventDefault();
+    var input = document.getElementById('custom-food-input');
+    var text = input.value.trim();
+    if (!text) return;
+    if (!activeSlot) {
+      showToast('Tap a meal box first! 👆');
+      return;
+    }
+    addItemToActiveSlot(text, '🍽️');
+    input.value = '';
+    input.focus();
+  });
+
+  document.getElementById('print-btn').addEventListener('click', function () {
+    window.print();
+  });
+
+  document.getElementById('clear-btn').addEventListener('click', clearWeek);
+
+  // ---------- Init ----------
+
+  renderCategories();
+  renderAll();
+})();
+</script>
+
+</body>
+</html>
