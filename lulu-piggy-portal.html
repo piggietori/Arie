@@ -161,7 +161,22 @@
     font-size:clamp(17px,5vw,22px);
     color:var(--accent-dark);
   }
-  #item-counter{font-size:14px; color:#7a5a70; margin-top:2px;}
+  #item-counter-row{
+    display:flex; align-items:center; justify-content:center;
+    gap:10px; margin-top:2px;
+  }
+  #item-counter{font-size:14px; color:#7a5a70;}
+  .hint-button{
+    font-size:12px; font-weight:bold;
+    color:var(--accent-dark);
+    background:#fff;
+    border:2px solid #ffd0ea;
+    border-radius:999px;
+    padding:3px 10px;
+    box-shadow:0 2px 0 #e7a9cd;
+  }
+  .hint-button:active{transform:translateY(2px); box-shadow:none;}
+  .hint-button:disabled{opacity:.45; box-shadow:none;}
 
   .scene{
     position:relative;
@@ -227,33 +242,45 @@
 
   .item{
     position:absolute;
-    width:46px; height:46px;
+    width:44px; height:44px;
     display:flex; align-items:center; justify-content:center;
-    font-size:26px;
-    background:rgba(255,255,255,.55);
+    font-size:21px;
+    background:transparent;
     border-radius:50%;
-    border:2px solid rgba(255,255,255,.9);
-    animation:sparkle 1.6s ease-in-out infinite;
+    border:none;
+    filter:drop-shadow(0 1px 2px rgba(0,0,0,.25));
+    animation:idlePulse 3.4s ease-in-out infinite;
     z-index:4;
     transform:translate(-50%,-50%);
   }
-  @keyframes sparkle{
-    0%,100%{ box-shadow:0 0 0 0 rgba(255,255,255,.6); }
-    50%{ box-shadow:0 0 0 8px rgba(255,255,255,0); }
+  @keyframes idlePulse{
+    0%,100%{ opacity:.88; transform:translate(-50%,-50%) scale(1); }
+    50%{ opacity:1; transform:translate(-50%,-50%) scale(1.05); }
   }
   .item.found{
     animation:none;
-    background:rgba(255,255,255,.15);
-    border-color:rgba(255,255,255,.3);
-    opacity:.35;
+    opacity:.3;
     pointer-events:none;
-    filter:grayscale(.6);
+    filter:grayscale(.7);
   }
   .item.pop{ animation:popOut .5s ease forwards; }
   @keyframes popOut{
     0%{transform:translate(-50%,-50%) scale(1);}
     50%{transform:translate(-50%,-50%) scale(1.5);}
     100%{transform:translate(-50%,-50%) scale(1);}
+  }
+  .item.miss{ animation:missWiggle .45s ease; }
+  @keyframes missWiggle{
+    0%,100%{ transform:translate(-50%,-50%) rotate(0deg); }
+    25%{ transform:translate(-50%,-50%) rotate(-12deg) scale(.95); }
+    75%{ transform:translate(-50%,-50%) rotate(12deg) scale(.95); }
+  }
+  .item.hinting{
+    animation:hintGlow 1.4s ease-in-out;
+  }
+  @keyframes hintGlow{
+    0%,100%{ box-shadow:0 0 0 0 rgba(255,255,255,0); background:transparent; }
+    30%,70%{ box-shadow:0 0 0 10px rgba(255,255,255,.5); background:rgba(255,255,255,.55); border-radius:50%; }
   }
   .float-plus{
     position:absolute;
@@ -363,7 +390,7 @@
   }
 
   @media (max-width:360px){
-    .item{width:40px; height:40px; font-size:22px;}
+    .item{width:38px; height:38px; font-size:19px;}
     .friend .avatar{width:54px; height:54px; font-size:36px;}
   }
 </style>
@@ -421,7 +448,10 @@
     <section id="screen-universe" class="screen">
       <div id="universe-banner">
         <h2 id="universe-name">Universe</h2>
-        <div id="item-counter">Found: <span id="found-count">0</span>/3</div>
+        <div id="item-counter-row">
+          <div id="item-counter">Found: <span id="found-count">0</span>/3</div>
+          <button id="btn-hint" class="hint-button" type="button" aria-label="Show a hint">💡 Hint</button>
+        </div>
       </div>
       <div id="universe-scene" class="scene">
         <div id="friend-character" class="friend"></div>
@@ -478,12 +508,15 @@
       greeting:"Hiya! I'm Puffy the cloud bunny! Someone scattered my three sticky candy stars all over the sky. Can you help me find them?",
       badge:"🍬",
       keyMessage:"You and Puffy found all the candy stars! A shiny key pops out of a cloud!",
-      items:[
-        {emoji:"⭐", top:18, left:20, label:"candy star"},
-        {emoji:"⭐", top:30, left:78, label:"candy star"},
-        {emoji:"⭐", top:62, left:12, label:"candy star"}
+      spots:[
+        {emoji:"⭐", top:16, left:18, label:"candy star"},
+        {emoji:"⭐", top:12, left:68, label:"candy star"},
+        {emoji:"⭐", top:34, left:82, label:"candy star"},
+        {emoji:"⭐", top:30, left:10, label:"candy star"},
+        {emoji:"⭐", top:52, left:45, label:"candy star"},
+        {emoji:"⭐", top:60, left:75, label:"candy star"}
       ],
-      decoCount:5
+      decoCount:8
     },
     {
       id:"star",
@@ -494,12 +527,15 @@
       greeting:"Meow! I'm Twinkle the star kitten! I lost three of my glowing moon marbles among the stars. Will you help me look?",
       badge:"⭐",
       keyMessage:"All three moon marbles are back! A galaxy key twinkles into view!",
-      items:[
-        {emoji:"🌙", top:22, left:16, label:"moon marble"},
-        {emoji:"🌙", top:14, left:70, label:"moon marble"},
-        {emoji:"🌙", top:58, left:82, label:"moon marble"}
+      spots:[
+        {emoji:"🌙", top:14, left:14, label:"moon marble"},
+        {emoji:"🌙", top:10, left:66, label:"moon marble"},
+        {emoji:"🌙", top:26, left:40, label:"moon marble"},
+        {emoji:"🌙", top:36, left:80, label:"moon marble"},
+        {emoji:"🌙", top:55, left:20, label:"moon marble"},
+        {emoji:"🌙", top:60, left:60, label:"moon marble"}
       ],
-      decoCount:14
+      decoCount:16
     },
     {
       id:"ocean",
@@ -510,12 +546,15 @@
       greeting:"Hi there! I'm Splash the otter! The waves washed away my three favorite shiny shells. Could you help me find them?",
       badge:"🐚",
       keyMessage:"All three shells are found! A pearly key bubbles up from the lagoon!",
-      items:[
-        {emoji:"🐚", top:24, left:22, label:"shiny shell"},
-        {emoji:"🐚", top:40, left:74, label:"shiny shell"},
-        {emoji:"🐚", top:66, left:34, label:"shiny shell"}
+      spots:[
+        {emoji:"🐚", top:20, left:20, label:"shiny shell"},
+        {emoji:"🐚", top:16, left:60, label:"shiny shell"},
+        {emoji:"🐚", top:34, left:78, label:"shiny shell"},
+        {emoji:"🐚", top:34, left:38, label:"shiny shell"},
+        {emoji:"🐚", top:55, left:15, label:"shiny shell"},
+        {emoji:"🐚", top:62, left:55, label:"shiny shell"}
       ],
-      decoCount:8
+      decoCount:11
     },
     {
       id:"meadow",
@@ -526,12 +565,15 @@
       greeting:"Purr! I'm Whiskers! I was playing and lost three little yarn flowers in the grass. Help me find them so we can play more?",
       badge:"🌸",
       keyMessage:"All three yarn flowers are found! A grassy key blooms into view!",
-      items:[
-        {emoji:"🌼", top:58, left:18, label:"yarn flower"},
-        {emoji:"🌼", top:70, left:66, label:"yarn flower"},
-        {emoji:"🌼", top:50, left:82, label:"yarn flower"}
+      spots:[
+        {emoji:"🌼", top:42, left:15, label:"yarn flower"},
+        {emoji:"🌼", top:38, left:55, label:"yarn flower"},
+        {emoji:"🌼", top:52, left:80, label:"yarn flower"},
+        {emoji:"🌼", top:65, left:30, label:"yarn flower"},
+        {emoji:"🌼", top:70, left:60, label:"yarn flower"},
+        {emoji:"🌼", top:58, left:10, label:"yarn flower"}
       ],
-      decoCount:4
+      decoCount:9
     }
   ];
 
@@ -539,8 +581,18 @@
     universeIndex:0,
     found:{},
     badgesEarned:[],
-    muted:false
+    muted:false,
+    hintOnCooldown:false
   };
+
+  function shuffle(arr){
+    var a = arr.slice();
+    for (var i=a.length-1;i>0;i--){
+      var j = Math.floor(Math.random()*(i+1));
+      var tmp = a[i]; a[i]=a[j]; a[j]=tmp;
+    }
+    return a;
+  }
 
   var screens = {};
   ["title","story","universe","finale","end"].forEach(function(name){
@@ -608,6 +660,8 @@
     [523.25,659.25,783.99,1046.5,1318.5].forEach(function(f,i){ tone(f, i*0.14, 0.35, "triangle", 0.22); });
   }
   function playClick(){ tone(300,0,0.06,"sine",0.1); }
+  function playMiss(){ tone(220,0,0.1,"sine",0.1); tone(180,0.08,0.14,"sine",0.08); }
+  function playHint(){ tone(740,0,0.1,"sine",0.14); tone(988,0.08,0.16,"sine",0.14); }
 
   /* ---------- Confetti ---------- */
   var canvas = document.getElementById("confetti-canvas");
@@ -762,23 +816,48 @@
 
     renderDeco(scene, universe);
 
-    universe.items.forEach(function(item, i){
+    var TARGET_COUNT = 3;
+    var shuffled = shuffle(universe.spots);
+    var targets = shuffled.slice(0, TARGET_COUNT);
+    var decoys = shuffled.slice(TARGET_COUNT, TARGET_COUNT * 2);
+    universe.targetCount = TARGET_COUNT;
+
+    var order = shuffle(targets.concat(decoys));
+    order.forEach(function(spot, i){
+      var isTarget = targets.indexOf(spot) !== -1;
       var el = document.createElement("button");
       el.className = "item";
       el.type = "button";
-      el.textContent = item.emoji;
-      el.style.top = item.top + "%";
-      el.style.left = item.left + "%";
-      el.style.animationDelay = (i*0.2) + "s";
-      el.setAttribute("aria-label", "Find the " + item.label);
-      el.dataset.index = i;
-      el.addEventListener("click", function(){ onItemClick(el, universe); });
+      el.textContent = spot.emoji;
+      el.style.top = spot.top + "%";
+      el.style.left = spot.left + "%";
+      el.style.animationDelay = (i*0.15) + "s";
+      el.dataset.role = isTarget ? "target" : "decoy";
+      el.setAttribute("aria-label", isTarget ? ("Find the " + spot.label) : (spot.label + " (just a decoration)"));
+      if (isTarget){
+        el.addEventListener("click", function(){ onItemClick(el, universe); });
+      } else {
+        el.addEventListener("click", function(){ onDecoyClick(el); });
+      }
       itemsLayer.appendChild(el);
     });
+
+    state.hintOnCooldown = false;
+    var hintBtn = document.getElementById("btn-hint");
+    hintBtn.disabled = false;
 
     document.getElementById("bubble-emoji").textContent = universe.friendEmoji;
     document.getElementById("bubble-text").textContent = universe.greeting;
     speechBubble.classList.remove("hidden");
+  }
+
+  function onDecoyClick(el){
+    if (el.classList.contains("found")) return;
+    playMiss();
+    el.classList.remove("miss");
+    void el.offsetWidth;
+    el.classList.add("miss");
+    announce("Not quite, keep looking!");
   }
 
   function onItemClick(el, universe){
@@ -801,10 +880,32 @@
     document.getElementById("found-count").textContent = state.found[universe.id];
     announce(universe.friendName + " says thanks! " + state.found[universe.id] + " of 3 found.");
 
-    if (state.found[universe.id] >= universe.items.length){
+    if (state.found[universe.id] >= universe.targetCount){
+      document.getElementById("btn-hint").disabled = true;
       setTimeout(function(){ revealKey(universe); }, 500);
     }
   }
+
+  document.getElementById("btn-hint").addEventListener("click", function(){
+    if (state.hintOnCooldown) return;
+    resumeAudio();
+    var unfound = itemsLayer.querySelectorAll('.item[data-role="target"]:not(.found)');
+    if (!unfound.length) return;
+    var pick = unfound[Math.floor(Math.random() * unfound.length)];
+    pick.classList.remove("hinting");
+    void pick.offsetWidth;
+    pick.classList.add("hinting");
+    playHint();
+    announce("Hint: look near where it glows!");
+
+    state.hintOnCooldown = true;
+    var hintBtn = document.getElementById("btn-hint");
+    hintBtn.disabled = true;
+    setTimeout(function(){
+      state.hintOnCooldown = false;
+      hintBtn.disabled = false;
+    }, 5000);
+  });
 
   function revealKey(universe){
     playKeyJingle();
