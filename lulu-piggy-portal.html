@@ -315,6 +315,85 @@
   .bubble-card .emoji{font-size:40px;}
   .bubble-card p{font-size:15px; line-height:1.4; color:var(--ink);}
 
+  .puzzle-card{max-width:360px; width:100%;}
+  .puzzle-card h3{font-size:17px; color:var(--accent-dark);}
+  .bubble-card p.puzzle-feedback{min-height:18px; font-weight:bold; font-size:13px;}
+  .puzzle-feedback.ok{color:#3a9a5c;}
+  .puzzle-feedback.no{color:#d9534f;}
+
+  /* Maze */
+  .maze-wrap{display:flex; flex-direction:column; align-items:center; gap:12px;}
+  .maze-grid{
+    position:relative;
+    display:grid;
+    gap:3px;
+    background:#e8d6f5;
+    padding:5px;
+    border-radius:10px;
+  }
+  .maze-cell{
+    width:38px; height:38px;
+    border-radius:6px;
+    display:flex; align-items:center; justify-content:center;
+    font-size:16px;
+  }
+  .maze-cell.open{background:#fff6fb;}
+  .maze-cell.wall{background:#c9a2ff;}
+  .maze-player{
+    grid-row:1; grid-column:1;
+    display:flex; align-items:center; justify-content:center;
+    font-size:22px;
+    pointer-events:none;
+    transition:transform .15s ease;
+    z-index:2;
+  }
+  .maze-controls{display:grid; grid-template-columns:repeat(3,44px); grid-template-rows:repeat(2,44px); gap:4px; justify-content:center;}
+  .maze-controls button{
+    font-size:18px; border-radius:10px; background:#fff;
+    border:2px solid #ffd0ea; box-shadow:0 2px 0 #e7a9cd;
+  }
+  .maze-controls button:active{transform:translateY(2px); box-shadow:none;}
+  .maze-btn-up{grid-column:2; grid-row:1;}
+  .maze-btn-left{grid-column:1; grid-row:2;}
+  .maze-btn-down{grid-column:2; grid-row:2;}
+  .maze-btn-right{grid-column:3; grid-row:2;}
+
+  /* Crossword */
+  .crossword-wrap{display:flex; flex-direction:column; align-items:center; gap:12px;}
+  .crossword-grid{
+    position:relative;
+    display:grid;
+    gap:3px;
+  }
+  .cw-cell{
+    width:34px; height:34px;
+    position:relative;
+  }
+  .cw-cell.blank{visibility:hidden;}
+  .cw-cell input{
+    width:100%; height:100%;
+    text-align:center;
+    font-size:18px;
+    font-weight:bold;
+    text-transform:uppercase;
+    border-radius:6px;
+    border:2px solid #e7a9cd;
+    background:#fff6fb;
+    color:var(--ink);
+    padding:0;
+  }
+  .cw-cell input.correct{background:#e3f6e8; border-color:#3a9a5c;}
+  .cw-cell input.wrong{background:#fdeceb; border-color:#d9534f;}
+  .cw-number{
+    position:absolute; top:-1px; left:2px;
+    font-size:9px; font-weight:bold; color:var(--accent-dark);
+    pointer-events:none;
+  }
+  .clue-list{font-size:12px; color:#7a5a70; text-align:left; line-height:1.5;}
+  .clue-list div{margin-bottom:2px;}
+  .puzzle-buttons{display:flex; gap:10px; justify-content:center;}
+  .puzzle-buttons .big-button{min-width:120px; padding:10px 18px; font-size:14px;}
+
   #key-panel{
     position:absolute; left:0; right:0; bottom:0;
     background:linear-gradient(0deg,#fff 70%,rgba(255,255,255,0));
@@ -466,7 +545,16 @@
         <div class="bubble-card">
           <div class="emoji" id="bubble-emoji">🐷</div>
           <p id="bubble-text"></p>
-          <button id="btn-bubble-close" class="big-button">Let's Explore!</button>
+          <button id="btn-bubble-close" class="big-button">Let's Help!</button>
+        </div>
+      </div>
+
+      <div id="puzzle-overlay" class="speech-bubble hidden">
+        <div class="bubble-card puzzle-card">
+          <h3 id="puzzle-title"></h3>
+          <p id="puzzle-story"></p>
+          <div id="puzzle-body"></div>
+          <p id="puzzle-feedback" class="puzzle-feedback" aria-live="polite"></p>
         </div>
       </div>
     </section>
@@ -505,9 +593,16 @@
       theme:"theme-cloud",
       friendEmoji:"🐰",
       friendName:"Puffy",
-      greeting:"Hiya! I'm Puffy the cloud bunny! Someone scattered my three sticky candy stars all over the sky. Can you help me find them?",
+      greeting:"Hiya! I'm Puffy the cloud bunny! Oh no — a gust of wind broke our cloud bridge! Help Lulu hop across safely, and then I've also lost three sticky candy stars somewhere nearby!",
       badge:"🍬",
       keyMessage:"You and Puffy found all the candy stars! A shiny key pops out of a cloud!",
+      puzzle:{
+        type:"maze",
+        title:"Cross the Cloud Bridge!",
+        story:"Tap the arrows to hop Lulu across the clouds to the rainbow gate. Watch out for gaps!",
+        goalEmoji:"🌈",
+        grid:["S..#.","##.#.",".....",".###.","....E"]
+      },
       spots:[
         {emoji:"⭐", top:16, left:18, label:"candy star"},
         {emoji:"⭐", top:12, left:68, label:"candy star"},
@@ -524,9 +619,18 @@
       theme:"theme-star",
       friendEmoji:"🐱",
       friendName:"Twinkle",
-      greeting:"Meow! I'm Twinkle the star kitten! I lost three of my glowing moon marbles among the stars. Will you help me look?",
+      greeting:"Meow! I'm Twinkle the star kitten! A shooting comet scrambled my star words! Help me fill them back in, and then I need help finding three glowing moon marbles I lost among the stars!",
       badge:"⭐",
       keyMessage:"All three moon marbles are back! A galaxy key twinkles into view!",
+      puzzle:{
+        type:"crossword",
+        title:"Fix Twinkle's Star Words!",
+        story:"Type the missing letters. The two words share a letter!",
+        words:[
+          {answer:"STAR", row:0, col:0, dir:"across", number:1, clue:"1 Across: Where Twinkle twinkles at night"},
+          {answer:"SKY", row:0, col:0, dir:"down", number:1, clue:"1 Down: The big space above us, full of stars"}
+        ]
+      },
       spots:[
         {emoji:"🌙", top:14, left:14, label:"moon marble"},
         {emoji:"🌙", top:10, left:66, label:"moon marble"},
@@ -543,9 +647,16 @@
       theme:"theme-ocean",
       friendEmoji:"🦦",
       friendName:"Splash",
-      greeting:"Hi there! I'm Splash the otter! The waves washed away my three favorite shiny shells. Could you help me find them?",
+      greeting:"Hi there! I'm Splash the otter! The tide swept Lulu into a coral maze — help her swim through to reach me! Then could you help me find three shiny shells the waves washed away?",
       badge:"🐚",
       keyMessage:"All three shells are found! A pearly key bubbles up from the lagoon!",
+      puzzle:{
+        type:"maze",
+        title:"Swim the Coral Maze!",
+        story:"Tap the arrows to guide Lulu through the reef to Splash's cave.",
+        goalEmoji:"🐙",
+        grid:["S#...",".#.#.","...#.",".###.","....E"]
+      },
       spots:[
         {emoji:"🐚", top:20, left:20, label:"shiny shell"},
         {emoji:"🐚", top:16, left:60, label:"shiny shell"},
@@ -562,9 +673,18 @@
       theme:"theme-meadow",
       friendEmoji:"🐈",
       friendName:"Whiskers",
-      greeting:"Purr! I'm Whiskers! I was playing and lost three little yarn flowers in the grass. Help me find them so we can play more?",
+      greeting:"Purr! I'm Whiskers! The wind blew the letters right off my garden sign! Help me spell them back so the flowers can bloom, then let's find three little yarn flowers I lost in the grass!",
       badge:"🌸",
       keyMessage:"All three yarn flowers are found! A grassy key blooms into view!",
+      puzzle:{
+        type:"crossword",
+        title:"Spell the Garden Sign!",
+        story:"Type the missing letters. The two words share a letter!",
+        words:[
+          {answer:"GRASS", row:0, col:0, dir:"across", number:1, clue:"1 Across: Green and soft, it covers the meadow floor"},
+          {answer:"SUN", row:0, col:3, dir:"down", number:2, clue:"2 Down: It shines bright and warms the flowers"}
+        ]
+      },
       spots:[
         {emoji:"🌼", top:42, left:15, label:"yarn flower"},
         {emoji:"🌼", top:38, left:55, label:"yarn flower"},
@@ -803,6 +923,7 @@
     document.querySelectorAll(".deco").forEach(function(el){ el.remove(); });
     itemsLayer.innerHTML = "";
     keyPanel.classList.remove("shown");
+    document.getElementById("btn-hint").disabled = true;
 
     document.getElementById("universe-name").textContent = universe.name;
     document.getElementById("found-count").textContent = "0";
@@ -816,6 +937,12 @@
 
     renderDeco(scene, universe);
 
+    document.getElementById("bubble-emoji").textContent = universe.friendEmoji;
+    document.getElementById("bubble-text").textContent = universe.greeting;
+    speechBubble.classList.remove("hidden");
+  }
+
+  function spawnItems(universe){
     var TARGET_COUNT = 3;
     var shuffled = shuffle(universe.spots);
     var targets = shuffled.slice(0, TARGET_COUNT);
@@ -843,12 +970,285 @@
     });
 
     state.hintOnCooldown = false;
-    var hintBtn = document.getElementById("btn-hint");
-    hintBtn.disabled = false;
+    document.getElementById("btn-hint").disabled = false;
+  }
 
-    document.getElementById("bubble-emoji").textContent = universe.friendEmoji;
-    document.getElementById("bubble-text").textContent = universe.greeting;
-    speechBubble.classList.remove("hidden");
+  /* ---------- Puzzles ---------- */
+  var puzzleOverlay = document.getElementById("puzzle-overlay");
+  var puzzleBody = document.getElementById("puzzle-body");
+  var puzzleFeedback = document.getElementById("puzzle-feedback");
+
+  function playStep(){ tone(500,0,0.07,"square",0.1); }
+  function playType(){ tone(650,0,0.05,"sine",0.08); }
+  function playWrong(){ tone(200,0,0.08,"sine",0.1); tone(160,0.07,0.12,"sine",0.08); }
+  function playPuzzleWin(){
+    [587.33,739.99,880].forEach(function(f,i){ tone(f, i*0.12, 0.3, "triangle", 0.2); });
+  }
+
+  function showPuzzle(universe){
+    document.getElementById("puzzle-title").textContent = universe.puzzle.title;
+    document.getElementById("puzzle-story").textContent = universe.puzzle.story;
+    puzzleFeedback.textContent = "";
+    puzzleFeedback.className = "puzzle-feedback";
+    puzzleBody.innerHTML = "";
+
+    function onSolved(){
+      playPuzzleWin();
+      showerConfetti(50);
+      puzzleFeedback.textContent = "Yay! Great job!";
+      puzzleFeedback.className = "puzzle-feedback ok";
+      announce("Puzzle solved! " + universe.friendName + " cheers!");
+      setTimeout(function(){
+        puzzleOverlay.classList.add("hidden");
+        spawnItems(universe);
+        announce("Now help find the hidden treasures!");
+      }, 1100);
+    }
+
+    if (universe.puzzle.type === "maze"){
+      renderMaze(puzzleBody, universe.puzzle, onSolved);
+    } else {
+      renderCrossword(puzzleBody, universe.puzzle, onSolved);
+    }
+
+    puzzleOverlay.classList.remove("hidden");
+  }
+
+  function renderMaze(container, puzzle, onSolved){
+    var rows = puzzle.grid.map(function(row){ return row.split(""); });
+    var start = {r:0,c:0}, exit = {r:0,c:0};
+    rows.forEach(function(row, r){
+      row.forEach(function(ch, c){
+        if (ch === "S") start = {r:r,c:c};
+        if (ch === "E") exit = {r:r,c:c};
+      });
+    });
+
+    var wrap = document.createElement("div");
+    wrap.className = "maze-wrap";
+
+    var grid = document.createElement("div");
+    grid.className = "maze-grid";
+    grid.style.gridTemplateColumns = "repeat(" + rows[0].length + ", 38px)";
+    rows.forEach(function(row){
+      row.forEach(function(ch){
+        var cell = document.createElement("div");
+        cell.className = "maze-cell " + (ch === "#" ? "wall" : "open");
+        if (ch === "E") cell.textContent = puzzle.goalEmoji || "🚪";
+        grid.appendChild(cell);
+      });
+    });
+
+    var player = document.createElement("div");
+    player.className = "maze-player";
+    player.textContent = "🐷";
+    player.setAttribute("aria-hidden","true");
+    grid.appendChild(player);
+
+    var pos = {r:start.r, c:start.c};
+    function place(){
+      player.style.gridRow = (pos.r+1) + " / span 1";
+      player.style.gridColumn = (pos.c+1) + " / span 1";
+    }
+    place();
+
+    var solved = false;
+    function move(dr, dc){
+      if (solved) return;
+      var nr = pos.r + dr, nc = pos.c + dc;
+      if (nr < 0 || nr >= rows.length || nc < 0 || nc >= rows[0].length) return;
+      if (rows[nr][nc] === "#") return;
+      pos = {r:nr, c:nc};
+      place();
+      resumeAudio();
+      playStep();
+      if (pos.r === exit.r && pos.c === exit.c){
+        solved = true;
+        controls.querySelectorAll("button").forEach(function(b){ b.disabled = true; });
+        onSolved();
+      }
+    }
+
+    var controls = document.createElement("div");
+    controls.className = "maze-controls";
+    controls.setAttribute("role","group");
+    controls.setAttribute("aria-label","Maze controls");
+    var dirs = [
+      {cls:"maze-btn-up", label:"Move up", dr:-1, dc:0, icon:"⬆️"},
+      {cls:"maze-btn-left", label:"Move left", dr:0, dc:-1, icon:"⬅️"},
+      {cls:"maze-btn-down", label:"Move down", dr:1, dc:0, icon:"⬇️"},
+      {cls:"maze-btn-right", label:"Move right", dr:0, dc:1, icon:"➡️"}
+    ];
+    dirs.forEach(function(d){
+      var btn = document.createElement("button");
+      btn.type = "button";
+      btn.className = d.cls;
+      btn.textContent = d.icon;
+      btn.setAttribute("aria-label", d.label);
+      btn.addEventListener("click", function(){ move(d.dr, d.dc); });
+      controls.appendChild(btn);
+    });
+
+    wrap.appendChild(grid);
+    wrap.appendChild(controls);
+    container.appendChild(wrap);
+  }
+
+  function renderCrossword(container, puzzle, onSolved){
+    var maxRow = 0, maxCol = 0;
+    puzzle.words.forEach(function(w){
+      for (var i=0;i<w.answer.length;i++){
+        var r = w.row + (w.dir === "down" ? i : 0);
+        var c = w.col + (w.dir === "across" ? i : 0);
+        if (r > maxRow) maxRow = r;
+        if (c > maxCol) maxCol = c;
+      }
+    });
+    var rows = maxRow + 1, cols = maxCol + 1;
+
+    var cellMap = {};
+    puzzle.words.forEach(function(w){
+      for (var i=0;i<w.answer.length;i++){
+        var r = w.row + (w.dir === "down" ? i : 0);
+        var c = w.col + (w.dir === "across" ? i : 0);
+        var key = r + "_" + c;
+        if (!cellMap[key]) cellMap[key] = {letter:w.answer[i], number:(i===0 ? w.number : null), inputs:[]};
+        if (i === 0 && !cellMap[key].number) cellMap[key].number = w.number;
+      }
+    });
+
+    var wrap = document.createElement("div");
+    wrap.className = "crossword-wrap";
+
+    var grid = document.createElement("div");
+    grid.className = "crossword-grid";
+    grid.style.gridTemplateColumns = "repeat(" + cols + ", 34px)";
+
+    var inputMap = {};
+    for (var r=0;r<rows;r++){
+      for (var c=0;c<cols;c++){
+        var key = r + "_" + c;
+        var cellEl = document.createElement("div");
+        if (cellMap[key]){
+          cellEl.className = "cw-cell";
+          var input = document.createElement("input");
+          input.setAttribute("maxlength","1");
+          input.setAttribute("autocomplete","off");
+          input.setAttribute("aria-label", "Letter " + (r*cols+c));
+          input.dataset.r = r;
+          input.dataset.c = c;
+          cellEl.appendChild(input);
+          if (cellMap[key].number){
+            var num = document.createElement("span");
+            num.className = "cw-number";
+            num.textContent = cellMap[key].number;
+            cellEl.appendChild(num);
+          }
+          inputMap[key] = input;
+        } else {
+          cellEl.className = "cw-cell blank";
+        }
+        grid.appendChild(cellEl);
+      }
+    }
+
+    // wire up navigation per word direction
+    puzzle.words.forEach(function(w){
+      for (var i=0;i<w.answer.length;i++){
+        var r = w.row + (w.dir === "down" ? i : 0);
+        var c = w.col + (w.dir === "across" ? i : 0);
+        var input = inputMap[r+"_"+c];
+        (function(input, w, i){
+          input.addEventListener("input", function(){
+            input.value = input.value.toUpperCase().replace(/[^A-Z]/g,"");
+            input.classList.remove("correct","wrong");
+            if (input.value){
+              resumeAudio();
+              playType();
+              var nr = w.row + (w.dir === "down" ? i+1 : 0);
+              var nc = w.col + (w.dir === "across" ? i+1 : 0);
+              var next = inputMap[nr+"_"+nc];
+              if (next) next.focus();
+            }
+          });
+          input.addEventListener("keydown", function(e){
+            if (e.key === "Backspace" && !input.value){
+              var pr = w.row + (w.dir === "down" ? i-1 : 0);
+              var pc = w.col + (w.dir === "across" ? i-1 : 0);
+              var prev = inputMap[pr+"_"+pc];
+              if (prev) prev.focus();
+            }
+          });
+        })(input, w, i);
+      }
+    });
+
+    var clues = document.createElement("div");
+    clues.className = "clue-list";
+    puzzle.words.forEach(function(w){
+      var d = document.createElement("div");
+      d.textContent = w.clue;
+      clues.appendChild(d);
+    });
+
+    var buttons = document.createElement("div");
+    buttons.className = "puzzle-buttons";
+    var checkBtn = document.createElement("button");
+    checkBtn.type = "button";
+    checkBtn.className = "big-button";
+    checkBtn.textContent = "Check";
+    var resetBtn = document.createElement("button");
+    resetBtn.type = "button";
+    resetBtn.className = "big-button";
+    resetBtn.textContent = "Reset";
+    buttons.appendChild(checkBtn);
+    buttons.appendChild(resetBtn);
+
+    var solved = false;
+    checkBtn.addEventListener("click", function(){
+      if (solved) return;
+      resumeAudio();
+      var allCorrect = true;
+      Object.keys(cellMap).forEach(function(key){
+        var input = inputMap[key];
+        var right = cellMap[key].letter;
+        if (!input.value){ allCorrect = false; return; }
+        if (input.value === right){
+          input.classList.add("correct");
+          input.classList.remove("wrong");
+        } else {
+          input.classList.add("wrong");
+          input.classList.remove("correct");
+          allCorrect = false;
+        }
+      });
+      if (allCorrect){
+        solved = true;
+        Object.keys(inputMap).forEach(function(k){ inputMap[k].disabled = true; });
+        onSolved();
+      } else {
+        playWrong();
+        puzzleFeedback.textContent = "Not quite, try again!";
+        puzzleFeedback.className = "puzzle-feedback no";
+      }
+    });
+    resetBtn.addEventListener("click", function(){
+      resumeAudio();
+      playClick();
+      Object.keys(inputMap).forEach(function(k){
+        inputMap[k].value = "";
+        inputMap[k].classList.remove("correct","wrong");
+      });
+      puzzleFeedback.textContent = "";
+      puzzleFeedback.className = "puzzle-feedback";
+      var first = inputMap[Object.keys(inputMap)[0]];
+      if (first) first.focus();
+    });
+
+    wrap.appendChild(grid);
+    wrap.appendChild(clues);
+    wrap.appendChild(buttons);
+    container.appendChild(wrap);
   }
 
   function onDecoyClick(el){
@@ -926,6 +1326,7 @@
     resumeAudio();
     playGiggle();
     speechBubble.classList.add("hidden");
+    showPuzzle(UNIVERSES[state.universeIndex]);
   });
 
   friendEl && friendEl.addEventListener && null;
